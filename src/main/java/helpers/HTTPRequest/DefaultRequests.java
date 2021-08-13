@@ -1,5 +1,7 @@
 package helpers.HTTPRequest;
 
+import com.google.gson.JsonObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -83,7 +85,9 @@ public class DefaultRequests {
         return output;
     }
 
-    public static void postObject(){}
+    public static void postObject(String node, JsonObject jsonObject){
+
+    }
 
     public static void putObject(){}
 

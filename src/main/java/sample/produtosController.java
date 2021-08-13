@@ -1,10 +1,13 @@
 package sample;
 
+import Services.ProdutoService;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXDialog;
 import com.jfoenix.controls.JFXDialogLayout;
 import com.jfoenix.controls.JFXTextField;
-import helpers.*;
+import helpers.AlertDialogModel;
+import helpers.DefaultComponents;
+import helpers.ExcluirDialogModel;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -41,10 +44,8 @@ import models.Produto;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -92,24 +93,20 @@ public class produtosController implements Initializable {
 
     JFXDialog dialog;
     BorderPane border;
-
     FilteredList<Produto> filteredData;
     ObservableList<Produto> listaProdutos = FXCollections.observableArrayList();
     Produto produto;
-    String query = null;
-    PreparedStatement preparedStatement = null;
-    Connection connection = null;
-    ResultSet resultSet = null;
     int selectedIndex;
     boolean isSelected = false;
+
+    //connection
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         recuperarUsuario();
         prepareTableView();
         setupComponentes();
     }
-
-
 
 
     //Metodos Iniciais
@@ -141,6 +138,11 @@ public class produtosController implements Initializable {
     private void recuperarProdutos() throws SQLException {
         listaProdutos.clear();
         //recuperar todos os produtos
+        ArrayList<Produto> recup = ProdutoService.findAll();
+        for(int i = 0; i<recup.size(); i++){
+            listaProdutos.add(recup.get(i));
+        }
+        System.out.println("Produtos recuperados com sucesso!");
         tableView.setItems(listaProdutos);
     }
     private void setupComponentes() {
