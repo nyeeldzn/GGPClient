@@ -19,7 +19,6 @@ import models.Produto;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Stack;
 
 public class DefaultComponents {
 

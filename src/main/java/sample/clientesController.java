@@ -21,7 +21,10 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
@@ -32,8 +35,8 @@ import javafx.stage.WindowEvent;
 import javafx.util.StringConverter;
 import jxl.Workbook;
 import jxl.format.Colour;
-import jxl.write.*;
 import jxl.write.Label;
+import jxl.write.*;
 import models.Cliente;
 import models.OrdemPedido;
 import models.Usuario;
@@ -91,9 +94,6 @@ public class clientesController implements Initializable {
         private JFXTextField edtSearch;
 
         @FXML
-        private JFXButton btnSearch;
-
-        @FXML
         private JFXButton btnImport;
 
         private JFXDatePicker datePickerInicial;
@@ -138,7 +138,7 @@ public class clientesController implements Initializable {
 
     //metodos iniciais
             private void recuperarUsuario() {
-                    user = AuthenticationSystem.getUser();
+                //recuperar usuario atual
             }
             private void setupComponentes(){
                   btnImport.setOnAction((e) -> {
@@ -244,19 +244,19 @@ public class clientesController implements Initializable {
                     + " Horario de finalizaçao: "
                     + pedido.getHorario_finalizado());
 
-            if(pedido.getStatus().equals("Pendente") && pedido.getHorario_triagem().equals("")){
+            if(pedido.getStatus() == 1 && pedido.getHorario_triagem().equals("")){
                 //table 1
                 selectedTable = 1;
                 System.out.println("Pedido na tabela 1");
-            }else if(pedido.getStatus().equals("Pendente") && !(pedido.getHorario_triagem().equals(""))){
+            }else if(pedido.getStatus() == 1 && !(pedido.getHorario_triagem().equals(""))){
                 //table 2
                 selectedTable = 2;
                 System.out.println("Pedido na tabela 2");
-            }else if(pedido.getStatus().equals("Saiu para entrega")){
+            }else if(pedido.getStatus() == 4){
                 //table 2
                 selectedTable = 2;
                 System.out.println("Pedido na tabela 2");
-            }else if(pedido.getStatus().equals("Finalizado")){
+            }else if(pedido.getStatus() == 5){
                 //table 3
                 selectedTable = 3;
                 System.out.println("Pedido na tabela 3");
@@ -289,79 +289,10 @@ public class clientesController implements Initializable {
                 dialogExclusao.close();
             });
             btnExcluir.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
-                if(excluirCliente() == true){
                     dialogExclusao.close();
-                    refreshTable();
-                }else{
-                    dialogExclusao.close();
-                    JFXDialog dialogErro = AlertDialogModel.alertDialogErro("Houve um problema na exclusão", stackPane);
-                    dialogErro.show();
-                }
             });
         }
-            private boolean excluirCliente() {
-        boolean state = false;
-        Cliente backupCliente = cliente;
-        try {
-            query = "DELETE FROM `Clientes` WHERE `id` =?";
-            connection = db_connect.getConnect();
-            preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setInt(1, cliente.getId());
-            int count = preparedStatement.executeUpdate();
-            if(count > 0){
-                int contagem = excluirPedidosCliente();
-                if(contagem == 4){
-                    state = true;
-                    JFXDialog dialog = AlertDialogModel.alertDialogErro("Pedidos Excluidos",stackPane);
-                    dialog.show();
-                }
-                if(contagem > 0){
-                    state = true;
-                }else if(contagem == 0) {
-                    state = false;
-                    retornarBackupCliente(backupCliente);
-                }
-            }else{
-                state = false;
-            }
-        }catch (SQLException e){
-            Logger.getLogger(clientesController.class.getName()).log(Level.SEVERE, null, e);
-        }
-        return state;
-    }
-            private int excluirPedidosCliente(){
-        int countTables = 3;
-        int count = 0;
-        for(int i = 0; i<countTables; i++){
-            switch (i){
-                case 0:
-                    query = "DELETE FROM `Ordem_De_Pedido` WHERE `cliente_id` =?";
-                    if(db_crud.metodoExlusao(query,cliente.getId()) == true){
-                        count++;
-                    }else{
-                        count = 0;
-                    }
-                    break;
-                case 1:
-                    query = "DELETE FROM `Ordem_De_Pedido_Triagem` WHERE `cliente_id` =?";
-                    if(db_crud.metodoExlusao(query,cliente.getId()) == true){
-                        count++;
-                    }else{
-                        count = 0;
-                    }
-                    break;
-                case 2:
-                    query = "DELETE FROM `Ordem_De_Pedido_Finalizado` WHERE `cliente_id` =?";
-                    if(db_crud.metodoExlusao(query,cliente.getId()) == true){
-                        count++;
-                    }else {
-                        count = 4;
-                    }
-                    break;
-            }
-        }
-        return count;
-    }
+
             public void gerarDocumentoXLS(File file){
             System.out.println("Iniciando exportação");
             //Busca todos os itens da tabela
@@ -477,14 +408,14 @@ public class clientesController implements Initializable {
             for (int linha = 1; linha <= listaTabela.size(); linha++) {
                 Label label = new Label(0, linha, String.valueOf(listaTabela.get(linha - 1).getId()));
                 aba.addCell(label);
-                label = new Label(1, linha, listaTabela.get(linha- 1).getCliente_nome());
+                label = new Label(1, linha, listaTabela.get(linha- 1).getCliente().getNome());
                 //int count = DefaultComponents.countOfChar(listaTabela.get(linha).getCliente_nome());
                 aba.setColumnView(1, 35);
                 aba.addCell(label);
-                label = new Label(2, linha, listaTabela.get(linha- 1).getEnd_cliente());
+                label = new Label(2, linha, listaTabela.get(linha- 1).getCliente().getEndereco());
                 aba.setColumnView(2, 35);
                 aba.addCell(label);
-                label = new Label(3, linha, listaTabela.get(linha- 1).getNum_cliente());
+                label = new Label(3, linha, listaTabela.get(linha- 1).getCliente().getTelefone());
                 aba.setColumnView(3, 14);
                 aba.addCell(label);
                 label = new Label(4, linha, listaTabela.get(linha- 1).getData_entrada());
@@ -536,93 +467,36 @@ public class clientesController implements Initializable {
                 switch (cb_selectedIndex){
                     case 0:
                         System.out.println("Buscando nos Pedidos de Entrada");
-                        query = "SELECT * FROM `Pedidos` WHERE `data_entrada` >= ? AND `data_entrada` <= ? AND `cliente_id` =? AND `status_id` =?";
-                        listaPedidos = recuperarPedidosPorData(query, "1");
+                        //busca na entrada
                         tableViewPedidos.setItems(listaPedidos);
                         break;
                     case 1:
                         System.out.println("Buscando nos Pedidos em Triagem");
-                        query = "SELECT * FROM `Pedidos` WHERE `data_entrada` >= ? AND `data_entrada` <= ? AND `cliente_id` =? AND `status_id` =?";
-                        listaPedidosTriagem = recuperarPedidosPorData(query, "2");
+                        //busca na triagem
                         tableViewPedidos.setItems(listaPedidosTriagem);
                         break;
                     case 2:
                         System.out.println("Buscando nos Pedidos Finalizados");
-                        query = "SELECT * FROM `Pedidos` WHERE `data_entrada` >= ? AND `data_entrada` <= ? AND `cliente_id` =? AND `status_id` =?";
-                        listaPedidosFinalizados = recuperarPedidosPorData(query, "3");
+                        //busca nos finalizados
                         tableViewPedidos.setItems(listaPedidosFinalizados);
                         break;
                     case 3:
                         listaPedidosTodos.clear();
-                        System.out.println("Buscando em todos os status");
-                        query = "SELECT * FROM `Pedidos` WHERE `data_entrada` >= ? AND `data_entrada` <= ? AND `cliente_id` =?";
+                        //busca em todos os pedidos
                         listaPedidosTodos = recuperarPedidosPorData(query, "");
                                     tableViewPedidos.setItems(listaPedidosTodos);
                                     break;
                 }
             }
             private ObservableList<OrdemPedido> recuperarPedidosPorData(String query, String table) throws SQLException{
-                ObservableList<OrdemPedido> lista = FXCollections.observableArrayList();
-                lista.clear();
-                System.out.println("Cliente: " + cliente.getNome() + " " + "ID: " + cliente.getId());
-                System.out.println("Data Inicial de busca: " + dataInicial + "Data final de busca: " + dataFinal);
-                connection = db_connect.getConnect();
-                preparedStatement = connection.prepareStatement(query);
-                if(!(table.equals(""))) {
-                    preparedStatement.setString(1, dataInicial);
-                    preparedStatement.setString(2, dataFinal);
-                    preparedStatement.setInt(3, cliente.getId());
-                    preparedStatement.setString(4, table);
-                }else if(table.equals("")){
-                    preparedStatement.setString(1, dataInicial);
-                    preparedStatement.setString(2, dataFinal);
-                    preparedStatement.setInt(3, cliente.getId());
+                ObservableList<OrdemPedido> ped = FXCollections.observableArrayList();
+
+                return ped;
+
                 }
-                // preparedStatement.setString(2, dataFinal);
-                resultSet = preparedStatement.executeQuery();
-                while(resultSet.next()){
-                    lista.add(new OrdemPedido(resultSet.getInt("id"),
-                            resultSet.getInt("id"),
-                            resultSet.getString("cliente_nome"),
-                            resultSet.getString("cliente_endereco"),
-                            resultSet.getString("cliente_telefone"),
-                            resultSet.getString("forma_envio"),
-                            resultSet.getString("forma_pagamento"),
-                            resultSet.getString("forma_subst"),
-                            resultSet.getString("data_entrada"),
-                            resultSet.getString("horario_entrada"),
-                            resultSet.getString("horario_triagem"),
-                            resultSet.getString("horario_checkout"),
-                            resultSet.getString("horario_finalizado"),
-                            resultSet.getInt("operador_id"),
-                            resultSet.getInt("entregador_id"),
-                            resultSet.getString("fonte_pedido"),
-                            resultSet.getString("status"),
-                            resultSet.getDouble("troco"),
-                            resultSet.getString("caixa_responsavel"),
-                            resultSet.getInt("status_id")
-                    ));
-                    System.out.println(resultSet.getString("cliente_nome"));
-                }
-                return lista;
-            }
+
             private void recuperarClientes() throws SQLException {
-                query = "SELECT * FROM `Clientes`";
-                connection = db_connect.getConnect();
-                preparedStatement = connection.prepareStatement(query);
-                resultSet = preparedStatement.executeQuery();
-                while (resultSet.next()){
-                        listaClientes.add(new Cliente(
-                                resultSet.getInt("id"),
-                                resultSet.getString("cliente_nome"),
-                                resultSet.getString("cliente_endereco"),
-                                resultSet.getString("cliente_telefone"),
-                                resultSet.getString("data_cadastro"),
-                                resultSet.getInt("qtdPedidos")
-                                )
-                        );
-                        System.out.println("Clinte de ID: " + listaClientes.get(listaClientes.size() - 1).getId() + "|| Nome: " + listaClientes.get(listaClientes.size() - 1).getNome());
-                }
+                //busca todos os clientes
                 tableView.setItems(listaClientes);
             }
             private void alertDialogClientes() throws IOException {
@@ -641,65 +515,11 @@ public class clientesController implements Initializable {
                 );
                 dialog.show();
             }
-            private boolean insertCliente(String query, String value, int id) throws SQLException {
-            boolean updateState = false;
-            if(query != null && value != null){
-                System.out.println("Iniciando Update");
-                System.out.println("Inserindo " + value + " no cliente de id: " + id + " com a query: " + query);
-                connection = db_connect.getConnect();
-                preparedStatement = connection.prepareStatement(query);
-                preparedStatement.setString(1, value);
-                preparedStatement.setInt(2,id);
-                int count = preparedStatement.executeUpdate();
-                if(count > 0){
-                    System.out.println("Atualização feita com sucesso");
-                    refreshTable();
-                    dialog.close();
-                    updateState = true;
-                }else{
-                    JFXDialog dialogErro = AlertDialogModel.alertDialogErro("Houve um problema na atualização",stackPane);
-                    dialogErro.show();
-                    System.out.println("Houve um problema na atualização");
-                    updateState = false;
-                    }
-                }
-            return updateState;
-            }
-            private void insertClienteTodosCampos(String query, String nome, String telefone, String enderco, int id) throws SQLException {
-                connection = db_connect.getConnect();
-                preparedStatement = connection.prepareStatement(query);
-                preparedStatement.setString(1, nome);
-                preparedStatement.setString(2, enderco);
-                preparedStatement.setString(3, telefone);
-                preparedStatement.setInt(4, id);
-                int count = preparedStatement.executeUpdate();
-                if(count > 0){
-                    System.out.println("Update feita com sucesso");
-                    refreshTable();
-                    dialog.close();
-                }else{
-                    System.out.println("Houve um problema na Update");
-                    JFXDialog dialogerro = AlertDialogModel.alertDialogErro("Houve um Problema na atualizacao", stackPane);
-                    dialogerro.show();
-                }
 
-            }
             private void verificarComboBox() {
             cb_selectedIndex = comboBoxFiltroStatus.getSelectionModel().getSelectedIndex();
             System.out.println("Index de busca: " + cb_selectedIndex);
         }
-            private void retornarBackupCliente(Cliente bkpCliente) {
-        try {
-            query = "INSERT INTO `Clientes`(`id`, `cliente_nome`, `cliente_endereco`, `cliente_telefone`) VALUES (?,?,?,?)";
-            connection = db_connect.getConnect();
-            preparedStatement.setInt(1, bkpCliente.getId());
-            preparedStatement.setString(2, bkpCliente.getNome());
-            preparedStatement.setString(3, bkpCliente.getEndereco());
-            preparedStatement.setString(4, bkpCliente.getTelefone());
-        }catch (SQLException e){
-            Logger.getLogger(clientesController.class.getName()).log(Level.SEVERE, null, e);
-        }
-    }
     //metodos de negocios
 
         //objetos
@@ -756,7 +576,7 @@ public class clientesController implements Initializable {
                 edtEndereco.setText(cliente.getEndereco());
                 btnSalvar.setOnAction((e) -> {
                     System.out.println("Iniciando verificação");
-                    int id = cliente.getId();
+                    int id = Float.floatToIntBits(cliente.getId());
                     String nome = edtNome.getText().toUpperCase().trim();
                     String telefone = edtTelefone.getText().toUpperCase().trim();
                     String endereco = edtEndereco.getText().toUpperCase().trim();
@@ -764,42 +584,19 @@ public class clientesController implements Initializable {
                     if(!(nome.equals(cliente.getNome().toUpperCase().trim()))
                             && telefone.equals(cliente.getTelefone().trim())
                             && endereco.equals(cliente.getEndereco().toUpperCase().trim())){
-                        System.out.println("Setando query");
-                        query = "UPDATE `Clientes` SET `cliente_nome` =? WHERE `id`=?";
-                        try {
-                            insertCliente(query, nome, id);
-                        } catch (SQLException exception) {
-                            exception.printStackTrace();
-                        }
+                        //uppdate nome
                     }else if(!(telefone.equals(cliente.getTelefone().trim()))
                             && nome.equals(cliente.getNome().toUpperCase().trim())
                             && endereco.equals(cliente.getEndereco().toUpperCase().trim())){
-                        query = "UPDATE `Clientes` SET `cliente_telefone` = ? WHERE `id` = ?";
-                        System.out.println("Novo: " + telefone + " Anterior:" + cliente.getTelefone().trim());
-                        System.out.println("String nova: " + telefone.length() + " String anterior: " + cliente.getTelefone().trim().length());
-                        try {
-                            insertCliente(query, telefone, id);
-                        } catch (SQLException exception) {
-                            exception.printStackTrace();
-                        }
+                        //update telefone
                     }else if(!(endereco.equals(cliente.getEndereco().toUpperCase().trim()))
                             && nome.equals(cliente.getNome().toUpperCase().trim())
                             && telefone.equals(cliente.getTelefone().trim())){
-                      query = "UPDATE `Clientes` SET `cliente_endereco` = ? WHERE `id` = ?";
-                        try {
-                            insertCliente(query, endereco, id);
-                        } catch (SQLException exception) {
-                            exception.printStackTrace();
-                        }
+                        //update endereco
                     }else if(!(nome.equals(cliente.getNome().toUpperCase().trim()))
                             && !(telefone.equals(cliente.getTelefone().toUpperCase().trim()))
                             && !(endereco.equals(cliente.getEndereco().toUpperCase().trim()))){
-                        String queryModel = "UPDATE `Clientes` SET `cliente_nome` =?, `cliente_endereco` =?, `cliente_telefone` = ? WHERE `id`=?";
-                        try {
-                            insertClienteTodosCampos(queryModel,nome,telefone,endereco, id);
-                        } catch (SQLException exception) {
-                            exception.printStackTrace();
-                        }
+                        //update Cliente Todo
                     }
 
 
@@ -1002,25 +799,6 @@ public class clientesController implements Initializable {
                 hBox.setAlignment(Pos.CENTER);
                 return hBox;
             }
-            /*
-            public TableView tableView(){
-                tableView = new TableView<Cliente>();
-                TableColumn nomeCol = new TableColumn<Cliente, String>();
-                nomeCol.setSortType(TableColumn.SortType.ASCENDING);
-                nomeCol.setText("NOME");
-                nomeCol.setCellValueFactory(new PropertyValueFactory<>("nome"));
-                TableColumn telCol = new TableColumn<Cliente, String>();
-                telCol.setText("TELEFONE");
-                telCol.setCellValueFactory(new PropertyValueFactory<>("telefone"));
-                TableColumn endCol = new TableColumn<Cliente, String>();
-                endCol.setText("ENDEREÇO");
-                endCol.setCellValueFactory(new PropertyValueFactory<>("endereco"));
-                tableView.getColumns().addAll(nomeCol, endCol, telCol);
-                tableView.getSortOrder().add(nomeCol);
-                return tableView;
-            }
-
-             */
         //objetos
 
         //metodos de controle

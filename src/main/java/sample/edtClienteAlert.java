@@ -2,11 +2,6 @@ package sample;
 
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXTextField;
-import com.mysql.cj.xdevapi.Client;
-import helpers.db_connect;
-import helpers.intentData;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TableColumn;
@@ -65,6 +60,7 @@ public class edtClienteAlert implements Initializable {
     PreparedStatement preparedStatement = null;
     ResultSet resultSet = null;
     String cliente_id;
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
 
@@ -75,38 +71,20 @@ public class edtClienteAlert implements Initializable {
     //Metodos iniciais
 
 
-
     private void recuperarDadosCliente() throws SQLException {
-        query = "SELECT * from `Clientes` where `id` = ?";
-        connection = db_connect.getConnect();
-        preparedStatement = connection.prepareStatement(query);
-        preparedStatement.setInt(1, Integer.parseInt(cliente_id));
-        resultSet = preparedStatement.executeQuery();
-        while (resultSet.next()){
-            cliente = new Cliente(
-               resultSet.getInt("id"),
-                    resultSet.getString("cliente_nome"),
-                    resultSet.getString("cliente_endereco") ,
-                    resultSet.getString("cliente_telefone"),
-                    resultSet.getString("data_cadastro"),
-                    resultSet.getInt("qtdPedidos")
-            );
-            System.out.println(resultSet.getString("cliente_nome"));
-        }
-        }
+        //retornar cliente
     }
+
     //Metodos iniciais
 
 
-
-
     //Metodos de Negocios
 
     //Metodos de Negocios
-
 
 
     //Metodos de Controle
 
     //Metodos de Controle
 
+}

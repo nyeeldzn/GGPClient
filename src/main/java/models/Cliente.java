@@ -1,36 +1,35 @@
 package models;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Cliente {
 
-    int id;
-    String nome;
-    String endereco;
-    String telefone;
+    private Long id;
+    private String nome;
+    private String endereco;
+    private Bairro bairro;
+    private String telefone;
     String data_cadastro;
-    int qtdPedidos;
 
-    public Cliente(int id, String nome, String endereco, String telefone, String data_cadastro, int qtdPedidos) {
+    private List<OrdemPedido> pedidos = new ArrayList<>();
+
+    public Cliente(Long id, String nome, String endereco, Bairro bairro, String telefone, String data_cadastro) {
         this.id = id;
         this.nome = nome;
         this.endereco = endereco;
+        this.bairro = bairro;
         this.telefone = telefone;
         this.data_cadastro = data_cadastro;
-        this.qtdPedidos = qtdPedidos;
     }
 
-    public int getQtdPedidos() {
-        return qtdPedidos;
-    }
+    public Cliente(){}
 
-    public void setQtdPedidos(int qtdPedidos) {
-        this.qtdPedidos = qtdPedidos;
-    }
-
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -50,6 +49,14 @@ public class Cliente {
         this.endereco = endereco;
     }
 
+    public Bairro getBairro() {
+        return bairro;
+    }
+
+    public void setBairro(Bairro bairro) {
+        this.bairro = bairro;
+    }
+
     public String getTelefone() {
         return telefone;
     }
@@ -64,5 +71,13 @@ public class Cliente {
 
     public void setData_cadastro(String data_cadastro) {
         this.data_cadastro = data_cadastro;
+    }
+
+    public List<OrdemPedido> getPedidos() {
+        return pedidos;
+    }
+
+    public void setPedidos(List<OrdemPedido> pedidos) {
+        this.pedidos = pedidos;
     }
 }

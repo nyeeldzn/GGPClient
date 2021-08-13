@@ -2,7 +2,6 @@ package sample;
 
 import com.jfoenix.controls.*;
 import helpers.DefaultComponents;
-import helpers.db_connect;
 import helpers.intentData;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -27,8 +26,8 @@ import javafx.stage.StageStyle;
 import javafx.util.StringConverter;
 import jxl.Workbook;
 import jxl.format.Colour;
-import jxl.write.*;
 import jxl.write.Label;
+import jxl.write.*;
 import models.OrdemPedido;
 
 import java.io.File;
@@ -256,19 +255,19 @@ public class pedidosController implements Initializable {
                 + " Horario de finalizaçao: "
                 + pedido.getHorario_finalizado());
 
-        if(pedido.getStatus().equals("Pendente") && pedido.getHorario_triagem().equals("")){
+        if(pedido.getStatus() == 1 && pedido.getHorario_triagem().equals("")){
             //table 1
             selectedTable = 1;
             System.out.println("Pedido na tabela 1");
-        }else if(pedido.getStatus().equals("Pendente") && !(pedido.getHorario_triagem().equals(""))){
+        }else if(pedido.getStatus() == 1 && !(pedido.getHorario_triagem().equals(""))){
             //table 2
             selectedTable = 2;
             System.out.println("Pedido na tabela 2");
-        }else if(pedido.getStatus().equals("Saiu para entrega")){
+        }else if(pedido.getStatus() == 4){
             //table 2
             selectedTable = 2;
             System.out.println("Pedido na tabela 2");
-        }else if(pedido.getStatus().equals("Finalizado")){
+        }else if(pedido.getStatus() == 5){
             //table 3
             selectedTable = 3;
             System.out.println("Pedido na tabela 3");
@@ -330,47 +329,10 @@ public class pedidosController implements Initializable {
     }
     private ObservableList<OrdemPedido> recuperarPedidosPorData(String query, String table) throws SQLException {
         ObservableList<OrdemPedido> lista = FXCollections.observableArrayList();
-        lista.clear();
         System.out.println("Data Inicial de busca: " + dataInicial + "Data final de busca: " + dataFinal);
-        connection = db_connect.getConnect();
-        preparedStatement = connection.prepareStatement(query);
-        if(checkBoxDatas.isSelected() == true && cb_selectedIndex != 3){
-            preparedStatement.setString(1, table);
-            preparedStatement.setString(2, dataInicial);
-            preparedStatement.setString(3, dataFinal);
-        }else if (checkBoxDatas.isSelected() == true && cb_selectedIndex == 3){
-            preparedStatement.setString(1, dataInicial);
-            preparedStatement.setString(2, dataFinal);
-        }
-        if(checkBoxDatas.isSelected() == false && cb_selectedIndex != 3){
-            preparedStatement.setString(1, table);
-        }
-        resultSet = preparedStatement.executeQuery();
-        while(resultSet.next()){
-            lista.add(new OrdemPedido(
-                    resultSet.getInt("id"),
-                    resultSet.getInt("cliente_id"),
-                    resultSet.getString("cliente_nome"),
-                    resultSet.getString("cliente_endereco"),
-                    resultSet.getString("cliente_telefone"),
-                    resultSet.getString("forma_envio"),
-                    resultSet.getString("forma_pagamento"),
-                    resultSet.getString("forma_subst"),
-                    resultSet.getString("data_entrada"),
-                    resultSet.getString("horario_entrada"),
-                    resultSet.getString("horario_triagem"),
-                    resultSet.getString("horario_checkout"),
-                    resultSet.getString("horario_finalizado"),
-                    resultSet.getInt("operador_id"),
-                    resultSet.getInt("entregador_id"),
-                    resultSet.getString("fonte_pedido"),
-                    resultSet.getString("status"),
-                    resultSet.getDouble("troco"),
-                    resultSet.getString("caixa_responsavel"),
-                    resultSet.getInt("status_id")
-            ));
-            System.out.println(resultSet.getString("cliente_nome"));
-        }
+        //connection = db_connect.getConnect();
+        //usar checkbox de status
+        //recuperar pedido por data
         return lista;
     }
     private void switchQuery() throws SQLException {
@@ -504,14 +466,14 @@ public class pedidosController implements Initializable {
             for (int linha = 1; linha <= listaTabela.size(); linha++) {
                 Label label = new Label(0, linha, String.valueOf(listaTabela.get(linha - 1).getId()));
                 aba.addCell(label);
-                label = new Label(1, linha, listaTabela.get(linha- 1).getCliente_nome());
+                label = new Label(1, linha, listaTabela.get(linha- 1).getCliente().getNome());
                 //int count = DefaultComponents.countOfChar(listaTabela.get(linha).getCliente_nome());
                 aba.setColumnView(1, 35);
                 aba.addCell(label);
-                label = new Label(2, linha, listaTabela.get(linha- 1).getEnd_cliente());
+                label = new Label(2, linha, listaTabela.get(linha- 1).getCliente().getEndereco());
                 aba.setColumnView(2, 35);
                 aba.addCell(label);
-                label = new Label(3, linha, listaTabela.get(linha- 1).getNum_cliente());
+                label = new Label(3, linha, listaTabela.get(linha- 1).getCliente().getTelefone());
                 aba.setColumnView(3, 14);
                 aba.addCell(label);
                 label = new Label(4, linha, listaTabela.get(linha- 1).getData_entrada());
@@ -546,18 +508,15 @@ public class pedidosController implements Initializable {
                 }
 
                 String upperCaseFilter = newValue.toUpperCase().trim();
-                if(pedido.getCliente_nome().toUpperCase().indexOf(upperCaseFilter) != -1){
+                if(pedido.getCliente().getNome().toUpperCase().indexOf(upperCaseFilter) != -1){
                     return true;
-                }else if(pedido.getEnd_cliente().toUpperCase().indexOf(upperCaseFilter) != -1)
+                }else if(pedido.getCliente().getEndereco().toUpperCase().indexOf(upperCaseFilter) != -1)
                     return true;
-                else if(pedido.getNum_cliente().toUpperCase().indexOf(upperCaseFilter) != -1)
+                else if(pedido.getCliente().getTelefone().toUpperCase().indexOf(upperCaseFilter) != -1)
                     return true;
-                else if(pedido.getForma_pagamento().toUpperCase().indexOf(upperCaseFilter) != -1){
+                else if(pedido.getForma_pagamento().toUpperCase().indexOf(upperCaseFilter) != -1) {
                     return true;
-                }else if(pedido.getForma_envio().toUpperCase().indexOf(upperCaseFilter) != -1)
-                    return true;
-                else if(pedido.getForma_subst().toUpperCase().indexOf(upperCaseFilter) != -1)
-                return true;
+                }
                 else
                     return false;
             });

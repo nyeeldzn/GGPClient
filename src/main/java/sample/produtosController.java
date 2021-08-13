@@ -37,7 +37,6 @@ import jxl.Workbook;
 import jxl.format.Colour;
 import jxl.write.*;
 import models.Produto;
-import models.Usuario;
 
 import java.io.File;
 import java.io.IOException;
@@ -103,7 +102,6 @@ public class produtosController implements Initializable {
     ResultSet resultSet = null;
     int selectedIndex;
     boolean isSelected = false;
-    Usuario user;
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         recuperarUsuario();
@@ -116,7 +114,7 @@ public class produtosController implements Initializable {
 
     //Metodos Iniciais
     private void recuperarUsuario() {
-        user = AuthenticationSystem.getUser();
+        //recuperar usuario
     }
     private void prepareTableView(){
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -142,18 +140,7 @@ public class produtosController implements Initializable {
     }
     private void recuperarProdutos() throws SQLException {
         listaProdutos.clear();
-        query = "SELECT * FROM `Produto`";
-        connection = db_connect.getConnect();
-        preparedStatement = connection.prepareStatement(query);
-        resultSet = preparedStatement.executeQuery();
-
-        while(resultSet.next()){
-            listaProdutos.add(new Produto(
-                    resultSet.getInt("id"),
-                    resultSet.getString("nome_produto")
-            ));
-            System.out.println("Produto: ID: " + resultSet.getInt("id") + " Nome: " + resultSet.getString("nome_produto"));
-        }
+        //recuperar todos os produtos
         tableView.setItems(listaProdutos);
     }
     private void setupComponentes() {
@@ -161,20 +148,14 @@ public class produtosController implements Initializable {
             novoProduto();
         });
         btnEditar.setOnAction((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, 3) == true){
                 if (isSelected == true) {
                     editarProduto();
                 }else{
                  JFXDialog dialog = AlertDialogModel.alertDialogErro("Selecione um produto", stackPane);
                  dialog.show();
                 }
-            }else{
-                JFXDialog dialog = AlertDialogModel.alertDialogErro("Você não tem permissão para isso.",stackPane);
-                dialog.show();
-            }
         });
         btnExcluir.setOnAction((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, 3) == true){
                 JFXButton confirmar = new JFXButton("EXCLUIR");
                 JFXButton cancelar = new JFXButton("CANCELAR");
                 dialog = ExcluirDialogModel.alertDialogErro("DESEJA REALMENTE DELETAR O PRODUTO?", stackPane, confirmar, cancelar);
@@ -185,10 +166,6 @@ public class produtosController implements Initializable {
                 cancelar.setOnAction((actionEvent) ->{
                     dialog.close();;
                 });
-            }else{
-                JFXDialog dialog = AlertDialogModel.alertDialogErro("Você não tem permissão para isso.",stackPane);
-                dialog.show();
-            }
         });
         edtSearch.setOnKeyTyped(new EventHandler<KeyEvent>() {
             @Override
@@ -232,7 +209,7 @@ public class produtosController implements Initializable {
     }
 
     private void editarProduto() {
-        //db_crud.metodoEditarProduto( )
+        //Editar produto
         alertDialogEditarProduto();
     }
     //Metodos Iniciais
@@ -244,9 +221,8 @@ public class produtosController implements Initializable {
     private boolean excluirProduto(){
         boolean state = false;
         if(isSelected != false){
-            query = "DELETE FROM `Produto` WHERE `id` =?";
-            state = db_crud.metodoExlusao(query, produto.getId());
-            if(state == true){
+            //exluir produto
+            if(true){
                 refreshTable();
                 dialog.close();
             }else{
@@ -280,19 +256,8 @@ public class produtosController implements Initializable {
         });
     }
     private void inserirProduto(String nome_produto) throws SQLException {
-        query = "INSERT INTO `Produto`(`id`, `nome_produto`) VALUES (?,?)";
-        connection = db_connect.getConnect();
-        preparedStatement = connection.prepareStatement(query);
-        preparedStatement.setInt(1, 0);
-        preparedStatement.setString(2, nome_produto);
-        int count = preparedStatement.executeUpdate();
-        if(count > 0){
-            System.out.println("Produto criado");
-            dialog.close();
-            refreshTable();
-        }else{
-            System.out.println("Houve um problema");
-        }
+        //inserir produto
+        //retornar refreshtable
     }
     public void gerarDocumentoXLS(File file){
         System.out.println("Inicnado exportação");
@@ -403,8 +368,8 @@ public class produtosController implements Initializable {
             if(!(nome_produto.equals(""))){
                 //salvar alteração
                 System.out.println("Iniciando update");
-                boolean state = db_crud.metodoEditarProduto(produto.getId(), edtNome.getText().toUpperCase().trim());
-                if(state == true){
+                //boolean state = db_crud.metodoEditarProduto(produto.getId(), edtNome.getText().toUpperCase().trim());
+                if(true){
                     dialog.close();
                     //refreshTable();
                 }else{

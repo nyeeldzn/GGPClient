@@ -1,11 +1,11 @@
 package sample;
 
+import Services.ClienteService;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXDialog;
 import com.jfoenix.controls.JFXPasswordField;
 import com.jfoenix.controls.JFXTextField;
 import helpers.AlertDialogModel;
-import helpers.AuthenticationSystem;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -15,7 +15,6 @@ import javafx.scene.control.TextFormatter;
 import javafx.scene.image.Image;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 
 import java.io.IOException;
 import java.net.URL;
@@ -67,7 +66,10 @@ public class LoginLogoutController implements Initializable {
         });
 
         btnLogin.setOnAction((e) -> {
-            authMethod();
+            //iniciarHome();
+            //authMethod();
+            ClienteService.findAll();
+            ClienteService.getById(1L);
         });
 
         btnClose.setOnAction((e) -> {
@@ -102,21 +104,18 @@ public class LoginLogoutController implements Initializable {
 
 
     private void authMethod() {
-        if (edtUsername.getText().isEmpty()) {
+        //retirar exclamacoes quando implementar o metodo de login
+        if (!edtUsername.getText().isEmpty()) {
         JFXDialog dialog = AlertDialogModel.alertDialogErro("Preencha o campo de usuario", stackPane);
         dialog.show();
         }else{
-            if(edtPassword.getText().isEmpty()){
+            if(!edtPassword.getText().isEmpty()){
                 JFXDialog dialog = AlertDialogModel.alertDialogErro("Preencha o campo de senha", stackPane);
                 dialog.show();
             }else{
-                boolean state = AuthenticationSystem.loginWithUsernameAndPassword(edtUsername.getText().toUpperCase().trim(), edtPassword.getText().trim());
-                if(state == true){
-                    iniciarHome();
-                }else {
-                    JFXDialog dialog = AlertDialogModel.alertDialogErro("Usuario ou senha incorreta, tente novamente", stackPane);
-                    dialog.show();
-                }
+                //realizar login//
+                //bypass para testes//
+                iniciarHome();
             }
         }
     }

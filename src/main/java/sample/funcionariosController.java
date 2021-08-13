@@ -2,9 +2,6 @@ package sample;
 
 import com.jfoenix.controls.*;
 import helpers.AlertDialogModel;
-import helpers.AuthenticationSystem;
-import helpers.StringUtil;
-import helpers.db_connect;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -24,7 +21,6 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
-import models.Cliente;
 import models.OrdemPedido;
 import models.Usuario;
 
@@ -105,25 +101,8 @@ public class funcionariosController implements Initializable {
         });
     }
     private void recuperarFuncionarios() {
-        query = "SELECT * FROM `Usuarios`";
-        connection = db_connect.getConnect();
-        try {
-            preparedStatement = connection.prepareStatement(query);
-            resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                listaUsuarios.add(new Usuario(
-                                resultSet.getInt("id"),
-                                resultSet.getString("nome"),
-                                "",
-                                resultSet.getInt("privilegio")
-                        )
-                );
-                System.out.println("Usuario de ID: " + listaUsuarios.get(listaUsuarios.size() - 1).getId() + "|| Nome: " + listaUsuarios.get(listaUsuarios.size() - 1).getUsername());
-            }
-            tableUsuario.setItems(listaUsuarios);
-        }catch (SQLException ex){
-            ex.printStackTrace();
-        }
+        //recuperar todos os usuarios
+        //tableUsuario.setItems(listaUsuarios);
     }
     private void prepararTableView() {
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -146,27 +125,8 @@ public class funcionariosController implements Initializable {
 
     //metodos de negocios
     private boolean insertUsuario(String query, String value, int id) throws SQLException {
-        boolean updateState = false;
-        if(query != null && value != null){
-            System.out.println("Iniciando Update");
-            System.out.println("Inserindo " + value + " no cliente de id: " + id + " com a query: " + query);
-            connection = db_connect.getConnect();
-            preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, value);
-            preparedStatement.setInt(2,id);
-            int count = preparedStatement.executeUpdate();
-            if(count > 0){
-                System.out.println("Atualização feita com sucesso");
-
-                updateState = true;
-            }else{
-                JFXDialog dialogErro = AlertDialogModel.alertDialogErro("Houve um problema na atualização",stackPane);
-                dialogErro.show();
-                System.out.println("Houve um problema na atualização");
-                updateState = false;
-            }
-        }
-        return updateState;
+        //inserir usuario
+        return false;
     }
     //metodos de negocios
 
@@ -242,16 +202,9 @@ public class funcionariosController implements Initializable {
                 String nome = edtNome.getText().trim();
                 int permissions = cbPermissoes.getSelectionModel().getSelectedIndex();
                 String senha = edtSenha.getText().trim();
-                Usuario newUser = new Usuario(0,nome, senha, permissions);
-                boolean state = AuthenticationSystem.signInWithUsernameAndPassword(newUser);
-                if(state == true){
-                    System.out.println("Usuario atualizado com os seguites dados: " + "ID: " + 0 + "Nome: " + nome + "SENHA: ******" + "Nivel de Permissao: " + permissions);
-                    dialog.close();
-                    refreshTable();
-                }else{
-                    JFXDialog dialog = AlertDialogModel.alertDialogErro("Houve um problema ao criar usuario",stackPane);
-                    dialog.show();
-                }
+                Usuario newUser = new Usuario();
+                //inserir usuario
+                //caso ok retornar refresh table e dialog.close();
             }else{
                 JFXDialog dialog = AlertDialogModel.alertDialogErro("Preencha todos os campos", stackPane);
                 dialog.show();
@@ -330,16 +283,8 @@ public class funcionariosController implements Initializable {
                 String nome = edtNome.getText().trim();
                 int permissions = cbPermissoes.getSelectionModel().getSelectedIndex();
                 String senha = edtSenha.getText().trim();
-                Usuario newUser = new Usuario(modelUsuario.getId(),nome, StringUtil.Cripto(senha), permissions);
-                boolean state = AuthenticationSystem.updateUsernameAndPassword(newUser);
-                if(state == true){
-                    System.out.println("Usuario atualizado com os seguites dados: " + "ID: " + modelUsuario.getId() + "Nome: " + nome + "SENHA: ******" + "Nivel de Permissao: " + permissions);
-                    dialog.close();
-                    refreshTable();
-                }else{
-                    JFXDialog dialog = AlertDialogModel.alertDialogErro("Houve um problema ao criar usuario",stackPane);
-                    dialog.show();
-                }
+                //Usuario newUser = new Usuario(modelUsuario.getId(),nome, StringUtil.Cripto(senha), permissions);
+                //atualizar usuario caso ok retornar refreshtable e dialog.close();
             }else{
                 JFXDialog dialog = AlertDialogModel.alertDialogErro("Preencha todos os campos", stackPane);
                 dialog.show();
@@ -351,9 +296,6 @@ public class funcionariosController implements Initializable {
         pane.getChildren().add(vboxPrincipal);
         return pane;
     }
-
-
-
     public JFXButton defaultButton(String texto){
         JFXButton button = new JFXButton();
         button.setStyle("-fx-background-color: lightgrey");

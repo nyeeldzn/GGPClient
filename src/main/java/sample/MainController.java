@@ -1,7 +1,9 @@
 package sample;
 
-import com.jfoenix.controls.*;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+import com.jfoenix.controls.JFXButton;
+import com.jfoenix.controls.JFXComboBox;
+import com.jfoenix.controls.JFXDialog;
+import com.jfoenix.controls.JFXHamburger;
 import helpers.*;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -14,20 +16,16 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -36,9 +34,11 @@ import models.OrdemPedido;
 import models.Usuario;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.URL;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -180,11 +180,11 @@ public class MainController implements Initializable {
 
     //Metodos Iniciais
     private void recuperarUsuario() {
-       user = AuthenticationSystem.getUser();
-       System.out.println("usuario logado: " + user.getUsername());
+        //recuperar usuario logado
+       //System.out.println("usuario logado: " + user.getUsername());
     }
     private void recuperarPedidos() {
-        connection = db_connect.getConnect();
+        //receber conexao
 
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
         // idCol.setSortType(TableColumn.SortType.DESCENDING);
@@ -205,27 +205,6 @@ public class MainController implements Initializable {
         refreshTable();
     }
     private void setupComponentes(){
-        /*
-        btnSample.setOnAction((e)->{
-            try {
-                Parent parent = FXMLLoader.load(getClass().getResource("/SampleScreen.fxml"));
-                Scene scene = new Scene(parent);
-                Stage stage = new Stage();
-                stage.setScene(scene);
-                stage.initStyle(StageStyle.UTILITY);
-                stage.show();
-                stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-                    @Override
-                    public void handle(WindowEvent event) {
-                        refreshTable();
-                        System.out.println("Janela fechada");
-                    }
-                });
-            } catch (IOException exception){
-                Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, exception);
-            }
-        });
-         */
         stackPane.setOnMousePressed(pressEvent -> {
             stackPane.setOnMouseDragged(dragEvent -> {
                 System.out.println("Movendo a Janela");
@@ -425,7 +404,6 @@ public class MainController implements Initializable {
 
     private void configDashBoard(int dias) {
         ArrayList<String> array = new ArrayList<>();
-        ArrayList<String> array2 = new ArrayList<>();
 
         JFXComboBox<String> cbPeriodoPedidoDiario = setupComboBox();
         JFXComboBox<String> cbPeriodoHorarioPico = setupComboBox();
@@ -652,31 +630,29 @@ public class MainController implements Initializable {
         listaTotalData.clear();
         listaPedidoFiltrados.clear();
         dias = getDias(dias, cbPeriodo);
+        /* recuperar dados de estatisticas
+
         array = DataManagerAnalytcs.getDatasArray(dias, array, dataInicial);
         if (DataManagerAnalytcs.isFinished == true) {
             listaTotalData = DataManagerAnalytcs.getListaTotalData();
             setChartLine(array, series);
         }
+
+         */
     }
 
     private void setupChartHorariosPico(ArrayList<String> array, JFXComboBox<String> cbPeriodo, XYChart.Series series) {
         listaTotalData.clear();
         listaPedidoFiltrados.clear();
         int horasDoDia = 15;
+        /*Recuperar estatisticas
         array = DataManagerAnalytcs.getHorariosArray(horasDoDia, array, listaPedidoFiltrados, dataInicial);
         if (DataManagerAnalytcs.isFinished == true) {
             listaTotalData = DataManagerAnalytcs.getListaTotalData();
             setChartLine(array, series);
         }
-    }
 
-
-
-    private void setChartLine(ArrayList<String> array, XYChart.Series series) {
-        series.getData().clear();
-        for(int i = 0; i<listaTotalData.size(); i++){
-            series.getData().add(new XYChart.Data<String, Number>(array.get(i), listaTotalData.get(i)));
-        }
+         */
     }
 
     private JFXComboBox<String> setupComboBox() {
@@ -727,81 +703,6 @@ public class MainController implements Initializable {
         }
         return sdf.format(d);
     }
-    private void recuperarDadosPedidos(String data) {
-        query = "SELECT * FROM `Ordem_De_Pedido_Triagem` WHERE `data_entrada` <= ?";
-        try {
-            connection = db_connect.getConnect();
-            preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, data);
-            resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()){
-                listaPedidoFiltrados.add(new OrdemPedido(
-                        resultSet.getInt("id"),
-                        resultSet.getInt("id"),
-                        resultSet.getString("cliente_nome"),
-                        resultSet.getString("cliente_endereco"),
-                        resultSet.getString("cliente_telefone"),
-                        resultSet.getString("forma_envio"),
-                        resultSet.getString("forma_pagamento"),
-                        resultSet.getString("forma_subst"),
-                        resultSet.getString("data_entrada"),
-                        resultSet.getString("horario_entrada"),
-                        resultSet.getString("horario_triagem"),
-                        resultSet.getString("horario_checkout"),
-                        resultSet.getString("horario_finalizado"),
-                        resultSet.getInt("operador_id"),
-                        resultSet.getInt("entregador_id"),
-                        resultSet.getString("fonte_pedido"),
-                        resultSet.getString("status"),
-                        resultSet.getDouble("troco"),
-                        resultSet.getString("caixa_responsavel"),
-                        resultSet.getInt("status_id")
-                ));
-                System.out.println(resultSet.getString("cliente_nome"));
-            }
-
-        }catch (SQLException sqlException){
-            sqlException.printStackTrace();
-        }
-
-    }
-    private ObservableList recuperarPorData(ObservableList list, String query, String data) {
-        try {
-            connection = db_connect.getConnect();
-            preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, data);
-            resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()){
-                list.add(new OrdemPedido(resultSet.getInt("id"),
-                        resultSet.getInt("id"),
-                        resultSet.getString("cliente_nome"),
-                        resultSet.getString("cliente_endereco"),
-                        resultSet.getString("cliente_telefone"),
-                        resultSet.getString("forma_envio"),
-                        resultSet.getString("forma_pagamento"),
-                        resultSet.getString("forma_subst"),
-                        resultSet.getString("data_entrada"),
-                        resultSet.getString("horario_entrada"),
-                        resultSet.getString("horario_triagem"),
-                        resultSet.getString("horario_checkout"),
-                        resultSet.getString("horario_finalizado"),
-                        resultSet.getInt("operador_id"),
-                        resultSet.getInt("entregador_id"),
-                        resultSet.getString("fonte_pedido"),
-                        resultSet.getString("status"),
-                        resultSet.getDouble("troco"),
-                        resultSet.getString("caixa_responsavel"),
-                        resultSet.getInt("status_id")
-                ));
-                System.out.println(resultSet.getString("cliente_nome"));
-            }
-
-        }catch (SQLException sqlException){
-            sqlException.printStackTrace();
-        }
-        return list;
-    }
-
 
     private void openProdutosController() {
         try {
@@ -862,27 +763,21 @@ public class MainController implements Initializable {
         //Recuperção entrada
         //
             listaPedidos.clear();
-            String query = "SELECT * FROM `Pedidos` WHERE `status_id` = ?";
-            listaPedidos = db_crud.recuperarPedidosViaStatus(query,1);
+             //recuperar pedido da entrada
                 tablePedido.setItems(listaPedidos);
-                //tablePedido.getColumns().addAll(idCol, nomeCol, telCol, statusCol);
                 tablePedido.getSortOrder().add(idCol);
         //
         //Recuperção triagem
         //
             listaPedidosTriagem.clear();
-            query = "SELECT * FROM `Pedidos` WHERE `status_id` =?";
-            listaPedidosTriagem = db_crud.recuperarPedidosViaStatus(query, 2);
+            //recuperar pedidos triagem
                 tablePedidoTriagem.setItems(listaPedidosTriagem);
-                //tablePedidoTriagem.getColumns().addAll(idColTriagem, nomeColTriagem, dataColTriagem, statusColTriagem);
                 tablePedidoTriagem.getSortOrder().add(idColTriagem);
         //Recuperção Finalizado
         //
             listaPedidosFinalizado.clear();
-            query = "SELECT * FROM `Pedidos` WHERE `status_id` =?";
-            listaPedidosFinalizado = db_crud.recuperarPedidosViaStatus(query,3);
+            //recuperar peiddos finalizados
                 tablePedidoFinalizado.setItems(listaPedidosFinalizado);
-                //tablePedidoTriagem.getColumns().addAll(idColTriagem, nomeColTriagem, dataColTriagem, statusColTriagem);
                 tablePedidoFinalizado.getSortOrder().add(idColFinalizado);
 
     }

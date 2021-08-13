@@ -1,9 +1,7 @@
 package sample;
 
 import com.jfoenix.controls.JFXButton;
-import com.mysql.cj.xdevapi.PreparableStatement;
 import helpers.DefaultComponents;
-import helpers.db_connect;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -52,7 +50,7 @@ public class importarProdutoController implements Initializable {
             metodoSelecao();
         });
         btnImport.setOnAction((e) -> {
-            connection = db_connect.getConnect();
+            // connection = db_connect.getConnect();
             for (int i = 0; i < listaProdutos.size(); i++) {
                 textNome.setText("Adicionando produto: " + listaProdutos.get(i) + "  " + "(" + i + "/" + listaProdutos.size() + ")");
                 boolean state = metodoInsertListaProdutos(listaProdutos.get(i));

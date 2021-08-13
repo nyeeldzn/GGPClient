@@ -2,7 +2,9 @@ package sample;
 
 import com.jfoenix.controls.*;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
-import helpers.*;
+import helpers.AlertDialogModel;
+import helpers.DefaultComponents;
+import helpers.ExcluirDialogModel;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -12,7 +14,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Alert;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextFormatter;
@@ -27,7 +28,6 @@ import models.ListaRuptura;
 import models.Produto;
 import models.Usuario;
 
-import javax.swing.*;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
@@ -40,10 +40,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.ResourceBundle;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static helpers.DefaultComponents.*;
 
@@ -141,7 +138,6 @@ public class listaRupturaController implements Initializable {
                 }
             }
         });
-
         pickerDataFinal.setValue(
                 nowOnDate()
         );
@@ -169,18 +165,10 @@ public class listaRupturaController implements Initializable {
                 }
             }
         });
-
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
         dataeCol.setCellValueFactory(new PropertyValueFactory<>("data"));
         responsavelCol.setCellValueFactory(new PropertyValueFactory<>("responsavel_id"));
-
         btnNovo.setOnAction((e) -> {
-          /*  try {
-                DefaultComponents.alertDialog3Itens(btnConfirmar, stackPane);
-            } catch (IOException exception) {
-                exception.printStackTrace();
-            }
-           */
             boolean state = verificarListaNoDia();
             if(state == true){
                 int larguraPadrao = 85;
@@ -206,8 +194,6 @@ public class listaRupturaController implements Initializable {
                 exception.printStackTrace();
             }
         });
-
-
         btnExcluir.setOnAction((e) -> {
             if(isSelectedLista == true){
                 excluirLista();
@@ -236,37 +222,20 @@ public class listaRupturaController implements Initializable {
                 refreshTable();
             }
         });
-
     }
     private void recuperarusuario() {
-        user = AuthenticationSystem.getUser();
+        //recuperar usuario
     }
     private boolean verificarListaNoDia() {
         System.out.println("Verificando Lista do dia");
         boolean state = false;
-        query = "SELECT * FROM `ListaRuptura` WHERE `data` =?";
-        try {
-            connection = db_connect.getConnect();
-            preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, dataAtual);
-            resultSet = preparedStatement.executeQuery();
-            ObservableList<ListaRuptura> listaRupturasLocal = FXCollections.observableArrayList();
-            while (resultSet.next()) {
-                ListaRuptura lista = new ListaRuptura(
-                  resultSet.getInt("id"),
-                  resultSet.getString("data"),
-                  resultSet.getInt("responsavel_id")
-                );
-                System.out.println("Lista Recuperada" + lista.getId());
-                listaRupturasLocal.add(lista);
-            }
-            System.out.println("Tamanho da lista: " + listaRupturasLocal.size());
+        //recvuperar listas em um array
+        /*
+        System.out.println("Tamanho da lista: " + listaRupturasLocal.size());
             if (listaRupturasLocal.size() < 1) {
                 state = false;
                 JFXButton btnOK = defaultButton("Criar");
-
                 JFXButton btnNO = defaultButton("Não");
-
                 JFXDialog dialog = ExcluirDialogModel.alertDialogErro("Não foi encontrada lista no dia, deseja criar uma nova?", stackPane,btnOK, btnNO );
                 dialog.show();
                 btnOK.setOnAction((e) ->{
@@ -281,74 +250,37 @@ public class listaRupturaController implements Initializable {
                 state = true;
                 recuperarTodosAsListas();
             }
-        }catch (SQLException ex){
-            ex.printStackTrace();
-        }
+
+         */
         return state;
         }
     private void recuperarTodosAsListas() {
         listaRupturas.clear();
-        query = "SELECT * FROM `ListaRuptura`";
-        try {
-            connection = db_connect.getConnect();
-            preparedStatement = connection.prepareStatement(query);
-            resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                ListaRuptura lista = new ListaRuptura(
-                        resultSet.getInt("id"),
-                        resultSet.getString("data"),
-                        resultSet.getInt("responsavel_id")
-                );
-                listaRupturas.add(lista);
-            }
-            tableLista.setItems(listaRupturas);
-        }catch (SQLException ex){
-            ex.printStackTrace();
-        }
+        //recuperar lista rupturas
+        tableLista.setItems(listaRupturas);
     }
     private void recuperarListasPorData() {
-        query = "SELECT * FROM `ListaRuptura` WHERE `data` BETWEEN ? AND ?";
-        try {
-            connection = db_connect.getConnect();
-            preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, dataInicial);
-            preparedStatement.setString(2, dataFinal);
-            resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                ListaRuptura lista = new ListaRuptura(
-                        resultSet.getInt("id"),
-                        resultSet.getString("data"),
-                        resultSet.getInt("responsavel_id")
-                );
-                listaRupturas.add(lista);
-            }
-            tableLista.setItems(listaRupturas);
-        }catch (SQLException ex){
-            ex.printStackTrace();
-        }
+        //recuperar lista rupturas por data
+        tableLista.setItems(listaRupturas);
     }
-
-
-
 
     //metodos iniciais
 
     //metodos de negocios
     private void salvarProduto(){
-        connection = db_connect.getConnect();
+        // connection = db_connect.getConnect();
         prod_nome = edt1.getText().toUpperCase().trim();
         if(prod_nome.isEmpty()){
             JFXDialog dialog = AlertDialogModel.alertDialogErro("Preencha todos os campos", stackPane);
             dialog.show();
         }else{
             for(int i = 1; i<produtos.size(); i++){
-                int id = produtos.get(i).getId();
+                Long id = produtos.get(i).getId();
                 String nomerecup = produtos.get(i).getNome().toUpperCase().trim();
 
                 System.out.println(nomerecup);
                 System.out.println(prod_nome);
                 System.out.println(i);
-
                 System.out.println(produtos.size());
 
                 if(nomerecup.equals(prod_nome)){
@@ -360,8 +292,8 @@ public class listaRupturaController implements Initializable {
                     if(i == produtos.size() - 1 && !(prod_nome.equals(nomerecup))){
                         System.out.println("Criando novo produto, finalizando for");
                         i = i + 1;
-                        boolean state = db_crud.insertProduto(id, prod_nome);
-                        if(state == true){
+                        //boolean state = db_crud.insertProduto(id, prod_nome);
+                        if(true){
                             try {
                                 System.out.println("Produto Criado: " + prod_nome);
                                 recuperarProdutoCriado(prod_nome);
@@ -389,41 +321,15 @@ public class listaRupturaController implements Initializable {
     }
 
     private void recuperarProdutoCriado(String nome) throws SQLException {
-        query = "SELECT * FROM `Produto` WHERE nome_produto = ?";
-        connection = db_connect.getConnect();
-        preparedStatement = connection.prepareStatement(query);
-        preparedStatement.setString(1, nome);
-        resultSet = preparedStatement.executeQuery();
-        while (resultSet.next()) {
-            String nome_produto = resultSet.getString("nome_produto");
-            int id = resultSet.getInt("id");
-            produto = new Produto(id, nome_produto);
-            System.out.println("Produto criado com ID: " + produto.getId() + "com Nome: " + produto.getNome());
-        }
-        addproduto_pedido(produto.getId(), produto.getNome());
+        //recuperar produto por nome retornar id
+        //produto = new Produto(id, nome_produto);
+        //addproduto_pedido(produto.getId(), produto.getNome());
     }
 
-    private void addproduto_pedido(int id, String nome) {
+    private void addproduto_pedido(Long id, String nome) {
         System.out.println("Produto de ID: " + id + "Nome: " + nome + " sendo adicionado ao pedido...");
-        query = "INSERT INTO `Lista_Produto`(`id`,`lista_id`, `produto_id`) VALUES (?,?,?)";
-        try {
-            preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setInt(1, 0);
-            preparedStatement.setInt(2, modelLista.getId());
-            preparedStatement.setInt(3, id); // pedido index
-            int count = preparedStatement.executeUpdate();
-            if(count > 0){
-                System.out.println("Produto adicionado");
-                restartAdd();
-            }else
-            {
-                System.out.println("Houve um problema");
-            }
-        }catch (SQLException ex){
-            Logger.getLogger(novoPedidoController.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        //inserir produto e caso ok retornar refreshtable
     }
-
 
     private void excluirLista(){
         JFXButton btnExcluir = defaultButton("SIM");
@@ -435,9 +341,8 @@ public class listaRupturaController implements Initializable {
             dialog.close();
         });
         btnExcluir.setOnAction((e) -> {
-            query = "DELETE FROM `ListaRuptura` WHERE `id` =?" ;
-            boolean state = db_crud.metodoExlusao(query, modelLista.getId());
-            if(state == true){
+            //exluir item por id modelLista.get()
+            if(true){
                 refreshTable();
                 dialog.close();
             }else{
@@ -448,25 +353,18 @@ public class listaRupturaController implements Initializable {
 
     }
     private void criarLista() {
-        System.out.println("Criando nova Lista de Rupturas");
-        query = "INSERT INTO `ListaRuptura`(`id`, `data`, `responsavel_id`) VALUES (?,?,?)";
-        try {
-            connection = db_connect.getConnect();
-            preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setInt(1, 0);
-            preparedStatement.setString(2, dataAtual);
-            preparedStatement.setInt(3, user.getId());
-            int count = preparedStatement.executeUpdate();
-            if(count > 0){
-                System.out.println("Sucesso");
-                refreshTable();
-            }else{
-                System.out.println("Houve um problema");
-            }
-        }catch (SQLException ex){
-            ex.printStackTrace();
-        }
+        //inserir lista de ruptura, retornar refreshtable caso ok
     }
+
+    private void recuperarProdutos() throws SQLException {
+        produtos.clear();
+        //recuperar todos os produtos
+    }
+    private void recuperarProdutosLista(int id) throws SQLException {
+        //recuperar produtos da lista pelo id da lista
+        tableProdutosLista.setItems(listaProdutos);
+    }
+
     private LocalDate nowOnDate(){
         LocalDate localDate = LocalDate.now();
         localDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
@@ -476,7 +374,6 @@ public class listaRupturaController implements Initializable {
         System.out.println("Data Atual: " + dataInicial);
         System.out.println("Data Atual: " + dataFinal);
         return localDate;
-
     }
     private String onDate (JFXDatePicker picker){
         LocalDate localDate = picker.getValue();
@@ -520,57 +417,10 @@ public class listaRupturaController implements Initializable {
 
 
     }
-    private void recuperarProdutos() throws SQLException {
-        produtos.clear();
-        query = "SELECT * FROM `Produto`";
-        connection = db_connect.getConnect();
-        preparedStatement = connection.prepareStatement(query);
-        resultSet = preparedStatement.executeQuery();
-        while (resultSet.next()) {
-            produtos.add(new Produto(
-                            resultSet.getInt("id"),
-                            resultSet.getString("nome_produto")
-                    )
-            );
-            System.out.println("Produto recuperado: " + resultSet.getString("nome_produto"));
-        }
-    }
-    private void recuperarProdutosLista(int id) throws SQLException {
-        query = "SELECT * FROM `Lista_Produto` WHERE `lista_id` =?";
-        connection = db_connect.getConnect();
-        preparedStatement = connection.prepareStatement(query);
-        preparedStatement.setInt(1, id);
-        resultSet = preparedStatement.executeQuery();
-        ArrayList<Integer> listaProdutosRecup = new ArrayList<>();
-        while (resultSet.next()) {
-            listaProdutosRecup.add(resultSet.getInt("produto_id"));
-            //System.out.println("Produto recuperado: " + resultSet.getInt("produto_id"));
-        }
-        listaProdutos.clear();
-        for(int i = 0; i<listaProdutosRecup.size(); i++) {
-            String query_inner = "SELECT * FROM `Produto` WHERE `id` =?";
-            Connection connection_inner = null;
-            connection_inner = db_connect.getConnect();
-            PreparedStatement preparedStatement_inner = null;
-            preparedStatement_inner = connection_inner.prepareStatement(query_inner);
-            preparedStatement_inner.setInt(1, listaProdutosRecup.get(i));
-            ResultSet resultSet_inner = null;
-            resultSet_inner = preparedStatement_inner.executeQuery();
-            while (resultSet_inner.next()){
-                listaProdutos.add(new Produto(
-                        resultSet_inner.getInt("id"),
-                        resultSet_inner.getString("nome_produto")
-                ));
-            }
-            System.out.println("Produto Recuperado:" + listaProdutos.get(i).getNome());
-            }
-        tableProdutosLista.setItems(listaProdutos);
-    }
-
-
     //metodos de negocios
 
     //objetos
+
     public void alertDialogBuscaProdutosListaRuptura() throws IOException {
         JFXDialogLayout dialogLayout = new JFXDialogLayout();
         dialog = new JFXDialog(stackPane, dialogLayout, JFXDialog.DialogTransition.TOP);

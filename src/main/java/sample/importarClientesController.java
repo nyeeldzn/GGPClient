@@ -2,7 +2,6 @@ package sample;
 
 import com.jfoenix.controls.JFXButton;
 import helpers.DefaultComponents;
-import helpers.db_connect;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -14,6 +13,7 @@ import jxl.Cell;
 import jxl.Sheet;
 import jxl.Workbook;
 import jxl.read.biff.BiffException;
+import models.Bairro;
 import models.Cliente;
 
 import java.io.File;
@@ -58,7 +58,7 @@ public class importarClientesController implements Initializable {
             quitScreen();
         });
         btnImport.setOnAction((e) -> {
-                connection = db_connect.getConnect();
+            //connection = db_connect.getConnect();
                 int i;
                 for (i = 0; i < listaClientes.size(); i++) {
                     boolean state = metodoInsertListaClientes(listaClientes.get(i));
@@ -111,7 +111,7 @@ public class importarClientesController implements Initializable {
             Cell cellNumero = sheet.getCell(5, i);
             Cell cellBairro = sheet.getCell(6, i);
             String enderecoCompleto = cellEndereco.getContents() + "," + cellNumero.getContents() + "," + cellBairro.getContents() ;
-            listaTemporaria.add(new Cliente(0, cellNome.getContents(), enderecoCompleto, "Sem Numero Cadastrado", "Usuario Importado", 0));
+            listaTemporaria.add(new Cliente(0L, cellNome.getContents(), enderecoCompleto, new Bairro(0L,"Bairro sem nome"), "Usuario Importado", "sem data"));
             System.out.println("Cliente: " + listaTemporaria.get(i).getNome() + " " + listaTemporaria.get(i).getTelefone() + " " + listaTemporaria.get(i).getEndereco() + " " + listaTemporaria.get(i).getData_cadastro());
         }
         workbook.close();

@@ -1,19 +1,34 @@
 package models;
 
-public class Produto {
-    int id;
-    String nome;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
-    public Produto(int id, String nome) {
+public class Produto implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+
+    private Long id;
+
+
+    private String nome;
+
+
+    private List<OrdemPedido> pedidos = new ArrayList<>();
+
+    public Produto() {
+    }
+
+    public Produto(Long id, String nome) {
         this.id = id;
         this.nome = nome;
     }
 
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -23,5 +38,13 @@ public class Produto {
 
     public void setNome(String nome) {
         this.nome = nome;
+    }
+
+    public List<OrdemPedido> getPedidos() {
+        return pedidos;
+    }
+
+    public void setPedidos(List<OrdemPedido> pedidos) {
+        this.pedidos = pedidos;
     }
 }

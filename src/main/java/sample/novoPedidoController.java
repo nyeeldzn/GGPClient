@@ -1,7 +1,7 @@
 package sample;
 
 import com.jfoenix.controls.*;
-import helpers.*;
+import helpers.AlertDialogModel;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -11,7 +11,10 @@ import javafx.collections.transformation.SortedList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -24,12 +27,15 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
+import models.Bairro;
 import models.Cliente;
-import models.OrdemPedido;
 import models.Usuario;
 
 import java.net.URL;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -39,8 +45,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.ResourceBundle;
-
-import static helpers.DataManagerAnalytcs.createEstatistica;
 
 public class novoPedidoController implements Initializable {
 
@@ -140,7 +144,7 @@ public class novoPedidoController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        user = AuthenticationSystem.getUser();
+        //recuperar usuario logado
 
         try {
             recuperarClientes();
@@ -154,48 +158,9 @@ public class novoPedidoController implements Initializable {
     //Metodos Iniciais
     private void recuperarClientes() throws SQLException {
         clientes.clear();
-        connection = db_connect.getConnect();
-        query = "SELECT * FROM `Clientes`";
-        preparedStatement = connection.prepareStatement(query);
-        resultSet = preparedStatement.executeQuery();
-        while (resultSet.next()) {
-            clientes.add(new Cliente(
-                            resultSet.getInt("id"),
-                            resultSet.getString("cliente_nome"),
-                            resultSet.getString("cliente_endereco"),
-                            resultSet.getString("cliente_telefone"),
-                            resultSet.getString("data_cadastro"),
-                            resultSet.getInt("qtdPedidos")
-                    )
-            );
-            System.out.println("Usuario recuperado: " + resultSet.getString("cliente_nome"));
-        }
+        //recuperar todos os clientes
     }
     private void setupComponentes() {
-        /*
-        edtNome.setOnKeyPressed((e) -> {
-            switch (e.getCode()){
-                case BACK_SPACE:
-                    break;
-                case ENTER:
-                    edtNome.setText(edtNome.getText().toUpperCase());
-                    edtEndereco.requestFocus();
-                    edtEndereco.setText(edtEndereco.getText().toUpperCase());
-                    edtTel.setText(edtTel.getText().toUpperCase());
-                    break;
-                case SHIFT:
-                    break;
-                default:
-                    Platform.runLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            String txt = edtNome.getText().toUpperCase();
-                            autoCompleteTextField(txt);
-                        }
-                    });
-            }
-        });
-        */
         edtNome.setTextFormatter(new TextFormatter<Object>((change) -> {
             change.setText(change.getText().toUpperCase());
             return change;
@@ -206,6 +171,7 @@ public class novoPedidoController implements Initializable {
         setupEdtFormaEnvio();
         setupEdtCasoFalta();
         setupEdtOrigem();
+
         checkBoxManual.setOnMouseClicked((e) -> {
             if(checkBoxManual.isSelected()){
                 hboxManual.setVisible(true);
@@ -213,8 +179,6 @@ public class novoPedidoController implements Initializable {
                 hboxManual.setVisible(false);
             }
         });
-
-
         edtEndereco.setOnKeyPressed((e) -> {
             switch (e.getCode()){
                 case ENTER:
@@ -227,13 +191,14 @@ public class novoPedidoController implements Initializable {
             return change;
         }));
         edtTel.setOnKeyPressed((e) -> {
+            Cliente cliente = new Cliente(Long.parseLong(String.valueOf(cliente_id)),clienteNome,clienteEndereco,new Bairro(),"","");
             switch (e.getCode()){
                 case ENTER:
                     edtFormaPagamento.requestFocus();
-                    verificarClienteExistente();
+                    verificarClienteExistente(cliente);
                     break;
                 case TAB:
-                    verificarClienteExistente();
+                    verificarClienteExistente(cliente);
                     break;
             }
         });
@@ -241,44 +206,14 @@ public class novoPedidoController implements Initializable {
             change.setText(change.getText().toUpperCase());
             return change;
         }));
-        /*
-        edtFormaPagamento.setOnKeyPressed((e) -> {
-            switch (e.getCode()){
-                case ENTER:
-                    edtFormaEnvio.requestFocus();
-                    break;
-            }
-        });
-
-         */
         edtFormaPagamento.setTextFormatter(new TextFormatter<Object>((change) -> {
             change.setText(change.getText().toUpperCase());
             return change;
         }));
-        /*
-        edtFormaEnvio.setOnKeyPressed((e) -> {
-            switch (e.getCode()){
-                case ENTER:
-                    edtCasoFalta.requestFocus();
-                    break;
-            }
-        });
-
-         */
         edtFormaEnvio.setTextFormatter(new TextFormatter<Object>((change) -> {
             change.setText(change.getText().toUpperCase());
             return change;
         }));
-        /*
-        edtCasoFalta.setOnKeyPressed((e) -> {
-            switch (e.getCode()){
-                case ENTER:
-                    edtTroco.requestFocus();
-                    break;
-            }
-        });
-
-         */
         edtCasoFalta.setTextFormatter(new TextFormatter<Object>((change) -> {
             change.setText(change.getText().toUpperCase());
             return change;
@@ -295,27 +230,31 @@ public class novoPedidoController implements Initializable {
             return change;
         }));
         edtFormaPagamento.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            Cliente cliente = new Cliente(Long.parseLong(String.valueOf(cliente_id)),clienteNome,clienteEndereco,new Bairro(),"","");
             @Override
             public void handle(MouseEvent event) {
-                verificarClienteExistente();
+                verificarClienteExistente(cliente);
             }
         });
         edtCasoFalta.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                verificarClienteExistente();
+                Cliente cliente = new Cliente(Long.parseLong(String.valueOf(cliente_id)),clienteNome,clienteEndereco,new Bairro(),"","");
+                verificarClienteExistente(cliente);
             }
         });
         edtFormaEnvio.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                verificarClienteExistente();
+                Cliente cliente = new Cliente(Long.parseLong(String.valueOf(cliente_id)),clienteNome,clienteEndereco,new Bairro(),"","");
+                verificarClienteExistente(cliente);
             }
         });
         edtTroco.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                verificarClienteExistente();
+                Cliente cliente = new Cliente(Long.parseLong(String.valueOf(cliente_id)),clienteNome,clienteEndereco,new Bairro(),"","");
+                verificarClienteExistente(cliente);
             }
         });
         edtFonte.setTextFormatter(new TextFormatter<Object>((change) -> {
@@ -325,7 +264,8 @@ public class novoPedidoController implements Initializable {
         edtFonte.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                verificarClienteExistente();
+                Cliente cliente = new Cliente(Long.parseLong(String.valueOf(cliente_id)),clienteNome,clienteEndereco,new Bairro(),"","");
+                verificarClienteExistente(cliente);
             }
         });
         edtFonte.setOnKeyPressed((e) -> {
@@ -339,7 +279,6 @@ public class novoPedidoController implements Initializable {
                     break;
             }
         });
-
         datePickerEntrada.setValue(nowOnDate());
         timePickerEntrada.setValue(nowOnTime());
         timePickerEntrada.setOnKeyPressed((e) -> {
@@ -570,7 +509,8 @@ public class novoPedidoController implements Initializable {
 
 
     private void recuperarClienteSelecionado(String nomeSelecionado) {
-        Cliente clienteSelecionado = db_crud.metodoRecupCliente(nomeSelecionado);
+        Cliente clienteSelecionado = new Cliente();
+        //recuperar cliente selecionado
         edtTel.setText(clienteSelecionado.getTelefone());
         edtEndereco.setText(clienteSelecionado.getEndereco());
         edtEndereco.requestFocus();
@@ -603,8 +543,6 @@ public class novoPedidoController implements Initializable {
         });
     }
     private void salvarPedido(){
-        connection = db_connect.getConnect();
-
         clienteNome = edtNome.getText();
         clienteEndereco = edtEndereco.getText();
         clienteTelefone = edtTel.getText();
@@ -640,8 +578,6 @@ public class novoPedidoController implements Initializable {
 
 
     }
-
-
     private void verificarCheckboxManual (){
         if (checkBoxManual.isSelected()) {
             insertPedidoManual();
@@ -649,27 +585,15 @@ public class novoPedidoController implements Initializable {
             insertPedido();
         }
     }
-
     private void insertPedidoManual() {
-        query =  "INSERT INTO `Pedidos`(`id`, `cliente_id`, `cliente_nome`, " +
-                "`cliente_endereco`, `cliente_telefone`, `forma_envio`, `forma_pagamento`, " +
-                "`forma_subst`, `data_entrada`, `horario_entrada`, `horario_triagem`, " +
-                "`horario_checkout`, `horario_finalizado`, `operador_id`, `entregador_id`, " +
-                "`fonte_pedido`, `status`, `troco`, `caixa_responsavel`, `status_id`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Date date = new Date();
         Date horario = new Date(System.currentTimeMillis());
         SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
         String horario_entrada = format.format(horario);
-        System.out.println(dateFormat.format(date));
-        System.out.println(horario_entrada);
         data_entrada = dateFormat.format(date);
         LocalDate data = datePickerEntrada.getValue();
         String dataInformada = data.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-
-        Usuario caixa = db_crud.metodoRecuperarUsuario("", edtCaixa.getText().toUpperCase());
-        Usuario entregador = db_crud.metodoRecuperarUsuario("", edtEntregador.getText().toUpperCase());
-
 
         String hEntrada = timePickerEntrada.getValue().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
         String hTriagem = timePickerTriagem.getValue().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
@@ -677,38 +601,13 @@ public class novoPedidoController implements Initializable {
         String hSaida = timePickerSaida.getValue().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
         String hFinalizado = timePickerFinalizado.getValue().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
 
-        OrdemPedido pedido = new OrdemPedido(
-                0,
-                cliente_id,
-                clienteNome,
-                clienteEndereco,
-                clienteTelefone,
-                formaEntrega,
-                formaPagamento,
-                casoFalta,
-                dataInformada,
-                hEntrada,
-                hTriagem,
-                hCheckout,
-                hFinalizado,
-                user.getId(),
-                entregador.getId(),
-                fonte,
-                "Finalizado",
-                troco,
-                edtCaixa.getText().toUpperCase(),
-                3);
+        //Inserir pedido
 
-        System.out.println(pedido.getStatus_id());
-        boolean state = db_crud.metodoInsertPedido(pedido, query);
-        if(state == true){
-            query = "INSERT INTO `Pedido_Estatisticas`" +
-                    "(`id_static`,`id`, `m.t`, `m.e`, `h.p`, data) " +
-                    "VALUES (?,?,?,?,?,?)";
-            System.out.println("Criando model estatistica com os dados:" + "ID: " + pedido.getId() + "Horario Triagem: " + pedido.getHorario_triagem() + "Horario Checkout: " + pedido.getHorario_checkout() + "Horario Finalizado: " + pedido.getHorario_finalizado() + "Horario Entrada: " +  pedido.getHorario_entrada());
-            PedidoEstatistica estatistica = createEstatistica(pedido.getId(), pedido.getHorario_triagem(), pedido.getHorario_checkout(), pedido.getHorario_finalizado(), pedido.getHorario_entrada());
-            boolean statistics = db_crud.metodoInsertEstatistica(estatistica,pedido.getData_entrada(), query);
-            if(statistics == true){
+        if(true){
+            //inserir estatistica
+            //PedidoEstatistica estatistica = createEstatistica(pedido.getId(), pedido.getHorario_triagem(), pedido.getHorario_checkout(), pedido.getHorario_finalizado(), pedido.getHorario_entrada());
+            //boolean statistics = db_crud.metodoInsertEstatistica(estatistica,pedido.getData_entrada(), query);
+            if(true){
                 restartAdd();
                 System.out.println("Sucesso ao gerar estatistica do pedido");
             }else{
@@ -719,15 +618,8 @@ public class novoPedidoController implements Initializable {
             dialog.show();
         }
     }
-
-
-
     private void insertPedido() {
-        query =  "INSERT INTO `Pedidos`(`id`, `cliente_id`, `cliente_nome`, " +
-                "`cliente_endereco`, `cliente_telefone`, `forma_envio`, `forma_pagamento`, " +
-                "`forma_subst`, `data_entrada`, `horario_entrada`, `horario_triagem`, " +
-                "`horario_checkout`, `horario_finalizado`, `operador_id`, `entregador_id`, " +
-                "`fonte_pedido`, `status`, `troco`, `caixa_responsavel`, `status_id`) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Date date = new Date();
         Date horario = new Date(System.currentTimeMillis());
@@ -737,35 +629,11 @@ public class novoPedidoController implements Initializable {
         System.out.println(horario_entrada);
         data_entrada = dateFormat.format(date);
 
-        Cliente clienteAtual = db_crud.metodoRecupCliente(clienteNome);
-
-        OrdemPedido pedido = new OrdemPedido(
-                0,
-                cliente_id,
-                clienteNome,
-                clienteEndereco,
-                clienteTelefone,
-                formaEntrega,
-                formaPagamento,
-                casoFalta,
-                data_entrada,
-                horario_entrada,
-                "",
-                "",
-                "",
-                user.getId(),
-                3,
-                fonte,
-                "Pendente",
-                troco,
-                "",
-                1);
-
-        System.out.println(pedido.getStatus_id());
-        boolean state = db_crud.metodoInsertPedido(pedido, query);
-        if(state == true){
-            boolean state2 = db_crud.metodoClienteAddPedido(clienteAtual.getId(), clienteAtual.getQtdPedidos());
-            if(state2 == true){
+        //inserir pedido
+        //boolean state = db_crud.metodoInsertPedido(pedido, query);
+        if(true){
+            //boolean state2 = db_crud.metodoClienteAddPedido(clienteAtual.getId(), clienteAtual.getQtdPedidos());
+            if(true){
                 fecharJanela();
             }else{
              JFXDialog alert = AlertDialogModel.alertDialogErro("Houve um problema ao adicionar um novo pedido na contagem do cliente", stackPane);
@@ -777,57 +645,8 @@ public class novoPedidoController implements Initializable {
             dialog.show();
         }
     }
-    public void autoCompleteTextField(String search){
-        String complete = "";
-        String endereco = "";
-        String numtel = "";
-
-        int start = search.length();
-        int last = search.length();
-
-        for(int i = 0; i<clientes.size(); i++){
-            if(clientes.get(i).getNome().toUpperCase().startsWith(search.toUpperCase())){
-                complete = clientes.get(i).getNome().toUpperCase();
-                endereco = clientes.get(i).getEndereco().toUpperCase();
-                numtel = clientes.get(i).getTelefone().toUpperCase();
-                last = complete.length();
-                break;
-            }
-        }
-        if(last>start){
-            edtNome.setText(complete);
-            edtNome.positionCaret(last);
-            edtNome.selectPositionCaret(start);
-            edtEndereco.setText(endereco);
-            edtTel.setText(numtel);
-        }
-    }
-    private void verificarClienteExistente() {
-        for(int i = 0; i < clientes.size(); i++){
-            int id_cliente = clientes.get(i).getId();
-            String nomerecup = clientes.get(i).getNome().toUpperCase().trim();
-            String nomeEditext = edtNome.getText().toUpperCase().trim();
-            String telefoneEdit = edtTel.getText().toUpperCase().trim();
-            String telefoneRecup = clientes.get(i).getTelefone().toUpperCase().trim();
-            String enderecoEdit = edtEndereco.getText().toUpperCase().trim();
-            String enderecoRecup = clientes.get(i).getEndereco().toUpperCase().trim();
-            if(nomerecup.equals(nomeEditext)){
-                cliente_id = clientes.get(i).getId();
-                i = clientes.size() - 1;
-                if(!(telefoneRecup.equals(telefoneEdit))){
-                    alertDialogTelefone(id_cliente);
-                }
-                if(!(enderecoRecup.equals(enderecoEdit))){
-                    alertDialogEndereco(id_cliente);
-                }
-            }else if(!(nomerecup.equals(nomeEditext))){
-                if(i == clientes.size() - 1 && !(nomeEditext.equals(nomerecup))){
-                    if(!(nomeEditext.equals(""))){
-                        alertDialog();
-                    }
-                }
-            }
-        }
+    private void verificarClienteExistente(Cliente cliente) {
+        //verificar cliente existente
     }
     private void criarCliente() throws SQLException {
         String cliente_nome = edtNome.getText().toUpperCase().toUpperCase().trim();
@@ -838,17 +657,9 @@ public class novoPedidoController implements Initializable {
         String data_cadastro = format.format(data);
         if(cliente_nome.length() < 150 && cliente_endereco.length() < 150 && cliente_telefone.length() < 150){
             if(!(cliente_nome.equals("") && !(cliente_endereco.equals("")) && !(cliente_telefone.equals("")))){
-                query = "INSERT INTO `Clientes`(`id`, `cliente_nome`, `cliente_endereco`, `cliente_telefone`, `data_cadastro`, `qtdPedidos`) VALUES (?,?,?,?,?,?)";
-                connection = db_connect.getConnect();
-                preparedStatement = connection.prepareStatement(query);
-                preparedStatement.setInt(1, 0);
-                preparedStatement.setString(2, cliente_nome);
-                preparedStatement.setString(3, cliente_endereco);
-                preparedStatement.setString(4, cliente_telefone);
-                preparedStatement.setString(5, data_cadastro);
-                preparedStatement.setInt(6, 1);
-                int count = preparedStatement.executeUpdate();
-                if(count > 0){
+                //inserir pedido
+                boolean state = false;
+                if(state){
                     System.out.println("Cliente Criado com Sucesso");
                     recuperarClientes();
                     dialog.close();
@@ -867,84 +678,6 @@ public class novoPedidoController implements Initializable {
     //Metodos de Negocios
 
     //Objetos
-    private void alertDialog() {
-        JFXDialogLayout dialogLayout = new JFXDialogLayout();
-        JFXButton buttonSim = new JFXButton("Sim");
-        JFXButton buttonCancelar = new JFXButton("Cancelar");
-        dialog = new JFXDialog(stackPane, dialogLayout, JFXDialog.DialogTransition.TOP);
-        buttonSim.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
-            try {
-                criarCliente();
-            } catch (SQLException exception) {
-                exception.printStackTrace();
-            }
-        });
-        buttonCancelar.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) ->{
-            dialog.close();
-        });
-        dialogLayout.setBody(new Text("Deseja criar um novo Cliente?"));
-        dialogLayout.setActions(buttonSim, buttonCancelar);
-        dialog.show();
-    }
-    private void alertDialogTelefone(int id) {
-        JFXDialogLayout dialogLayout = new JFXDialogLayout();
-        JFXButton buttonSim = new JFXButton("Sim");
-        JFXButton buttonCancelar = new JFXButton("Cancelar");
-        JFXDialog dialoginner = new JFXDialog(stackPane, dialogLayout, JFXDialog.DialogTransition.TOP);
-        buttonSim.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
-            //
-            String query = "UPDATE `Clientes` SET `cliente_telefone` =? WHERE `id` =?";
-            boolean state = db_crud.metodoUpdateCliente(edtTel.getText().toUpperCase().trim(), query, id);
-            if(state){
-                dialoginner.close();
-                try {
-                    recuperarClientes();
-                } catch (SQLException exception) {
-                    exception.printStackTrace();
-                }
-            }else{
-                JFXDialog alert = AlertDialogModel.alertDialogErro("Houve um problema ao atualizar o cliente", stackPane);
-                alert.show();
-            }
-            System.out.println("Atualizando telefone");
-        });
-        buttonCancelar.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) ->{
-            dialoginner.close();
-        });
-        dialogLayout.setBody(new Text("Deseja alterar o numero de telefone?"));
-        dialogLayout.setActions(buttonSim, buttonCancelar);
-        dialoginner.show();
-    }
-    private void alertDialogEndereco(int cliente_id) {
-        JFXDialogLayout dialogLayout = new JFXDialogLayout();
-        JFXButton buttonSim = new JFXButton("Sim");
-        JFXButton buttonCancelar = new JFXButton("Cancelar");
-        JFXDialog dialoginner = new JFXDialog(stackPane, dialogLayout, JFXDialog.DialogTransition.TOP);
-        buttonSim.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
-            String query = "UPDATE `Clientes` SET `cliente_endereco` =? WHERE `id` =?";
-            boolean state = db_crud.metodoUpdateCliente(edtEndereco.getText().toUpperCase().trim(), query, cliente_id);
-            if(state){
-                try {
-                    recuperarClientes();
-                } catch (SQLException exception) {
-                    exception.printStackTrace();
-                }
-                dialoginner.close();
-            }else{
-                JFXDialog alert = AlertDialogModel.alertDialogErro("Houve um problema ao atualizar o cliente", stackPane);
-                alert.show();
-            }
-            System.out.println("Atualizando endereco");
-        });
-        buttonCancelar.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) ->{
-            dialoginner.close();
-        });
-        dialogLayout.setBody(new Text("Deseja alterar o endereço do cliente?"));
-        dialogLayout.setActions(buttonSim, buttonCancelar);
-        dialoginner.show();
-    }
-
-
     private void alertDialogClientes() {
         selectedIndex = 0;
         JFXDialogLayout dialogLayout = new JFXDialogLayout();
@@ -974,7 +707,7 @@ public class novoPedidoController implements Initializable {
                 if(tableView.getSelectionModel().getSelectedItem() != null){
                     TableView.TableViewSelectionModel selectionModel = tableView.getSelectionModel();
                     Cliente cliente = (Cliente) tableView.getSelectionModel().getSelectedItem();
-                    selectedIndex = cliente.getId();
+                    selectedIndex = Math.toIntExact(cliente.getId());
                     selected_Cliente = cliente;
                     System.out.println(selectedIndex);
                 }
@@ -1050,7 +783,7 @@ public class novoPedidoController implements Initializable {
         edtNome.setText(cliente.getNome());
         edtEndereco.setText(cliente.getEndereco());
         edtTel.setText(cliente.getTelefone());
-        cliente_id = cliente.getId();
+        cliente_id = Math.toIntExact(cliente.getId());
     }
     private void fecharJanela() {
         Stage stage = (Stage) stackPane.getScene().getWindow();
@@ -1071,13 +804,6 @@ public class novoPedidoController implements Initializable {
         localTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
         return localTime;
 
-    }
-    private String onDate (JFXDatePicker picker){
-        LocalDate localDate = picker.getValue();
-        String dataFormatada = formatData(localDate.toString());
-        //dataInicial = formatData(localDate.toString());
-        //datePicker.setPromptText(dataInicial);
-        return dataFormatada;
     }
     public String formatData (String data){
         SimpleDateFormat sdf = null;

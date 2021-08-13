@@ -2,21 +2,19 @@ package sample;
 
 import com.jfoenix.controls.JFXAutoCompletePopup;
 import com.jfoenix.controls.JFXTextField;
-import helpers.AutoCompleteTextField;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.MenuItem;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import models.Bairro;
 import models.Cliente;
 
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.ResourceBundle;
 
 public class SampleScreen implements Initializable {
 
@@ -27,38 +25,16 @@ public class SampleScreen implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        array.add(new Cliente(0,"Daniel","","","",4));
-        array.add(new Cliente(1,"Floriza","","","",5));
-        array.add(new Cliente(2,"Fernando","","","",0));
-        array.add(new Cliente(3,"Rafael","","","",3));
-        array.add(new Cliente(4,"Joao","","","", 3));
+        array.add(new Cliente(null,"Daniel","",new Bairro(null, "Teste"),"",""));
+        array.add(new Cliente(null,"Floriza","",new Bairro(null, "Teste"),"",""));
+        array.add(new Cliente(null,"Fernando","",new Bairro(null, "Teste"),"",""));
+        array.add(new Cliente(null,"Rafael","",new Bairro(null, "Teste"),"",""));
+        array.add(new Cliente(null,"Joao","",new Bairro(null, "Teste"),"", ""));
 
         ArrayList<String> nomes = new ArrayList<>();
         for(int i = 0; i<array.size(); i++){
             nomes.add(array.get(i).getNome());
         }
-
-        /*
-        SortedSet<Cliente> entries = new TreeSet<>(Comparator.comparing(Object::toString));
-
-        entries.add(new Cliente(50, "Main Street", "Oakville", "Ontario", "T6P4K9"));
-        entries.add(new Cliente(3, "Fuller Road", "Toronto", "Ontario", "B6S4T9"));
-
-        //anchorPane.getChildren().add();
-
-        AutoCompleteTextField<Cliente> text = new AutoCompleteTextField(entries);
-        text.getEntryMenu().setOnAction((e) -> {
-            ((MenuItem) e.getTarget()).addEventHandler(Event.ANY, event ->
-            {
-                if (text.getLastSelectedObject() != null)
-                {
-                    text.setText(text.getLastSelectedObject().getNome());
-                    System.out.println(text.getLastSelectedObject().getNome());
-                }
-            });
-        });
-
-         */
 
         JFXAutoCompletePopup<String> autoCompletePopup = new JFXAutoCompletePopup<>();
         autoCompletePopup.getSuggestions().addAll(nomes);
