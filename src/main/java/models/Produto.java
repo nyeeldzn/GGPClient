@@ -40,11 +40,4 @@ public class Produto implements Serializable {
         this.nome = nome;
     }
 
-    public List<OrdemPedido> getPedidos() {
-        return pedidos;
-    }
-
-    public void setPedidos(List<OrdemPedido> pedidos) {
-        this.pedidos = pedidos;
-    }
 }

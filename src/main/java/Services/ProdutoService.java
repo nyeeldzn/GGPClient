@@ -41,6 +41,12 @@ public class ProdutoService {
             return produtos;
         }
 
-        public static Produto insert(Produto produto){
+        public static String insert(Produto produto){
+            Gson gson = new Gson();
+            String input = gson.toJson(produto);
+            System.out.println("Entrada do POST" + input);
+            String output = DefaultRequests.postObject("/produtos", input);
+            System.out.println("Saida do POST" + output);
+            return output;
         }
     }

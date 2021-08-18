@@ -259,6 +259,14 @@ public class produtosController implements Initializable {
     }
     private void inserirProduto(String nome_produto) throws SQLException {
         //inserir produto
+        Produto produto = new Produto(null, nome_produto);
+        String output = ProdutoService.insert(produto);
+        if(!(output.equals(""))){
+            refreshTable();
+            dialog.close();
+        }else{
+            System.out.println("Houve um problema na insercao");
+        }
         //retornar refreshtable
     }
     public void gerarDocumentoXLS(File file){

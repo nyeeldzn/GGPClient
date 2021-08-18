@@ -1,10 +1,9 @@
 package helpers.HTTPRequest;
 
-import com.google.gson.JsonObject;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
@@ -85,8 +84,45 @@ public class DefaultRequests {
         return output;
     }
 
-    public static void postObject(String node, JsonObject jsonObject){
+    public static String postObject(String node, String json){
+        String output = null;
+        try {
 
+            conn = (HttpURLConnection) new URL(rootUrl + node).openConnection();
+            conn.setDoOutput(true);
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+
+            System.out.println(json);
+            OutputStream os = conn.getOutputStream();
+            os.write(json.getBytes());
+            os.flush();
+
+            if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+            }
+
+            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+
+
+            System.out.println("Output from Server .... \n");
+            /*
+            while ((output = br.readLine()) != null) {
+                System.out.println(output);
+            }
+
+             */
+
+            output = br.readLine();
+
+
+            conn.disconnect();
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return output;
     }
 
     public static void putObject(){}
