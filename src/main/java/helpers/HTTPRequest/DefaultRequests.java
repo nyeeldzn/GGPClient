@@ -125,7 +125,47 @@ public class DefaultRequests {
         return output;
     }
 
-    public static void putObject(){}
+    public static int deleteObject(Long id, String node) {
+        int state = 0;
 
-    public static void deleteObject(){}
+        try {
+            conn = (HttpURLConnection) new URL(rootUrl + node + "/" + id).openConnection();
+            conn.setDoOutput(true);
+            conn.setRequestProperty(
+                    "Content-Type", "application/x-www-form-urlencoded");
+            conn.setRequestMethod("DELETE");
+            conn.connect();
+
+
+
+        }catch (ProtocolException protocolException){
+            protocolException.printStackTrace();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+        try {
+            switch (conn.getResponseCode()) {
+                case HttpURLConnection.HTTP_OK:
+                    state = 2;
+                    break;
+                case HttpURLConnection.HTTP_INTERNAL_ERROR:
+                    state = 1;
+                    break;
+                default:
+                    state = 0;
+                    System.out.println("Codigo de erro resultante: " + conn.getResponseCode());
+                    break;
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+        return state;
+    }
+
+    public static void putObject(Long id){
+
+    }
+
 }

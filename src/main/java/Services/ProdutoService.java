@@ -49,4 +49,10 @@ public class ProdutoService {
             System.out.println("Saida do POST" + output);
             return output;
         }
+
+        public static int delete(Long id){
+            int state;
+                state = DefaultRequests.deleteObject(id, "/produtos");
+            return state;
+        }
     }

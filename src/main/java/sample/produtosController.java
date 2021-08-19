@@ -223,13 +223,22 @@ public class produtosController implements Initializable {
     private boolean excluirProduto(){
         boolean state = false;
         if(isSelected != false){
-            //exluir produto
-            if(true){
-                refreshTable();
-                dialog.close();
-            }else{
-                dialog = AlertDialogModel.alertDialogErro("Houve um problema ao tentar excluir o produto", stackPane);
-                dialog.close();
+            System.out.println("Item selecionado e: " + produto.getId());
+            switch(ProdutoService.delete(produto.getId())){
+                case 0 :
+                    dialog.close();
+                    dialog = AlertDialogModel.alertDialogErro("Houve um problema ao tentar excluir o produto", stackPane);
+                    dialog.show();
+                    break;
+                case 1 :
+                    dialog.close();
+                    dialog = AlertDialogModel.alertDialogErro("Um produto associado a um pedido nao pode ser excluido", stackPane);
+                    dialog.show();
+                    break;
+                case 2:
+                    refreshTable();
+                    dialog.close();
+                    break;
             }
         }else{
             JFXDialog dialog = AlertDialogModel.alertDialogErro("Selecione um Produto", stackPane);
