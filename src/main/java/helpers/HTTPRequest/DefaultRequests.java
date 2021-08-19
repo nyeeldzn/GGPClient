@@ -1,9 +1,6 @@
 package helpers.HTTPRequest;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
@@ -164,8 +161,42 @@ public class DefaultRequests {
         return state;
     }
 
-    public static void putObject(Long id){
+    public static int putObject(String node, String json){
+        int state = 0;
+        try {
+            conn = (HttpURLConnection) new URL(rootUrl + node ).openConnection();
+            conn.setDoOutput(true);
+            conn.setRequestProperty(
+                    "Content-Type", "application/json");
+            conn.setRequestMethod("PUT");
+            OutputStreamWriter out = new OutputStreamWriter(
+                    conn.getOutputStream());
+            out.write(json);
+            out.close();
+            conn.getInputStream();
 
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+        try {
+            switch (conn.getResponseCode()) {
+                case HttpURLConnection.HTTP_OK:
+                    state = 2;
+                    break;
+                case HttpURLConnection.HTTP_INTERNAL_ERROR:
+                    state = 1;
+                    break;
+                default:
+                    state = 0;
+                    System.out.println("Codigo de erro resultante: " + conn.getResponseCode() + "Com json: " + json);
+                    break;
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+        return state;
     }
 
 }

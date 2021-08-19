@@ -151,7 +151,7 @@ public class produtosController implements Initializable {
         });
         btnEditar.setOnAction((e) -> {
                 if (isSelected == true) {
-                    editarProduto();
+                    alertDialogEditarProduto();
                 }else{
                  JFXDialog dialog = AlertDialogModel.alertDialogErro("Selecione um produto", stackPane);
                  dialog.show();
@@ -211,9 +211,23 @@ public class produtosController implements Initializable {
     }
 
     private void editarProduto() {
-        //Editar produto
-        alertDialogEditarProduto();
-    }
+        String nome_produto = edtNome.getText().toUpperCase().trim();
+        if(!(nome_produto.equals(""))){
+            System.out.println("Iniciando update");
+            switch (ProdutoService.update(new Produto(produto.getId(), nome_produto))){
+                case 0:
+                    dialog.close();
+                    JFXDialog dialoginner = AlertDialogModel.alertDialogErro("Houve um problema ao atualizar o produto.", stackPane);
+                    dialoginner.show();
+                    break;
+                case 2:
+                    dialog.close();
+                    refreshTable();
+                    break;
+            }
+        }else{
+            alertDialogAlert();
+        }    }
     //Metodos Iniciais
 
     //Metodos de Negocios
@@ -383,21 +397,7 @@ public class produtosController implements Initializable {
             dialog.close();
         });
         buttonConfirmar.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
-            String nome_produto = edtNome.getText().toUpperCase().trim();
-            if(!(nome_produto.equals(""))){
-                //salvar alteração
-                System.out.println("Iniciando update");
-                //boolean state = db_crud.metodoEditarProduto(produto.getId(), edtNome.getText().toUpperCase().trim());
-                if(true){
-                    dialog.close();
-                    //refreshTable();
-                }else{
-                    JFXDialog dialog = AlertDialogModel.alertDialogErro("Houve um problema ao editar o produto.", stackPane);
-                    dialog.show();
-                }
-            }else{
-                alertDialogAlert();
-            }
+            editarProduto();
         });
         dialogLayout.setPrefSize(250, 150);
         dialogLayout.setBody(

@@ -50,6 +50,13 @@ public class ProdutoService {
             return output;
         }
 
+        public static int update( Produto newObj){
+            Gson gson = new Gson();
+            String json = gson.toJson(newObj);
+
+            return DefaultRequests.putObject("/produtos", json);
+        }
+
         public static int delete(Long id){
             int state;
                 state = DefaultRequests.deleteObject(id, "/produtos");
