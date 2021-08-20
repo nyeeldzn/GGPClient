@@ -1,5 +1,7 @@
 package sample;
 
+import Services.BairroService;
+import Services.ClienteService;
 import com.jfoenix.controls.*;
 import helpers.*;
 import javafx.beans.value.ChangeListener;
@@ -37,6 +39,7 @@ import jxl.Workbook;
 import jxl.format.Colour;
 import jxl.write.Label;
 import jxl.write.*;
+import models.Bairro;
 import models.Cliente;
 import models.OrdemPedido;
 import models.Usuario;
@@ -112,6 +115,9 @@ public class clientesController implements Initializable {
         );
         String dataInicial = "";
         String dataFinal = "";
+
+        ObservableList<Bairro> bairros = FXCollections.observableArrayList();
+
         ObservableList<OrdemPedido> listaPedidos = FXCollections.observableArrayList();
         ObservableList<OrdemPedido> listaPedidosTriagem = FXCollections.observableArrayList();
         ObservableList<OrdemPedido> listaPedidosFinalizados = FXCollections.observableArrayList();
@@ -154,11 +160,7 @@ public class clientesController implements Initializable {
                   });
                   btnEditar.setOnAction((e) ->{
                       if(selectedCliente == true){
-                          try {
                               alertDialogClientes();
-                          } catch (IOException exception) {
-                              exception.printStackTrace();
-                          }
                       }else if(selectedCliente == false){
                           System.out.println("Selecione um cliente");
                           JFXDialog dialogErro = AlertDialogModel.alertDialogErro("Selecione um Cliente",stackPane);
@@ -289,11 +291,14 @@ public class clientesController implements Initializable {
                 dialogExclusao.close();
             });
             btnExcluir.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> {
+                    excluirCliente();
                     dialogExclusao.close();
             });
         }
 
-            public void gerarDocumentoXLS(File file){
+
+
+    public void gerarDocumentoXLS(File file){
             System.out.println("Iniciando exportação");
             //Busca todos os itens da tabela
             ObservableList<Cliente> listaTabela = FXCollections.observableArrayList();
@@ -497,9 +502,11 @@ public class clientesController implements Initializable {
 
             private void recuperarClientes() throws SQLException {
                 //busca todos os clientes
+                listaClientes.clear();
+                listaClientes = FXCollections.observableArrayList(ClienteService.findAll());
                 tableView.setItems(listaClientes);
             }
-            private void alertDialogClientes() throws IOException {
+            private void alertDialogClientes() {
                 JFXDialogLayout dialogLayout = new JFXDialogLayout();
                 dialog = new JFXDialog(stackPane, dialogLayout, JFXDialog.DialogTransition.TOP);
                 dialogLayout.setBody(
@@ -520,6 +527,22 @@ public class clientesController implements Initializable {
             cb_selectedIndex = comboBoxFiltroStatus.getSelectionModel().getSelectedIndex();
             System.out.println("Index de busca: " + cb_selectedIndex);
         }
+
+    private void excluirCliente() {
+            switch (ClienteService.delete(cliente.getId())){
+                case 0 :
+                    JFXDialog dialoginner = AlertDialogModel.alertDialogErro("Houve um problema ao atualizar o produto.", stackPane);
+                    dialoginner.show();
+                    break;
+                case 1 :
+                    JFXDialog dialoginner2 = AlertDialogModel.alertDialogErro("Nao e possivel excluir um cliente com pedidos.", stackPane);
+                    dialoginner2.show();
+                    break;
+                case 2 :
+                    refreshTable();
+                    break;
+            }
+    }
     //metodos de negocios
 
         //objetos
@@ -533,9 +556,14 @@ public class clientesController implements Initializable {
                 JFXTextField edtTelefone = textFieldPadrao(150);
                 JFXTextField edtEndereco = textFieldPadrao(550);
 
+                bairros = FXCollections.observableArrayList(BairroService.findAll());
+                JFXComboBox<Bairro> cbBairros = new JFXComboBox<>(bairros);
+                cbBairros.getSelectionModel().selectFirst();
+
                 HBox row1 = defaultHBox();
                 HBox row2 = defaultHBox();
                 HBox row3 = defaultHBox();
+                HBox row4 = defaultHBox();
 
                 VBox R1C1 = defaultVBox();
                 VBox R1C2 = defaultVBox();
@@ -563,43 +591,30 @@ public class clientesController implements Initializable {
                 );
 
                 row3.getChildren().addAll(
+
+                );
+
+                row4.getChildren().addAll(
                         btnSalvar,
                         btnCancelar
                 );
 
                 row3.setAlignment(Pos.CENTER_RIGHT);
 
-                vboxPrincipal.getChildren().addAll(row1, row2, row3);
+                vboxPrincipal.getChildren().addAll(row1, row2, row3, row4);
 
                 edtNome.setText(cliente.getNome());
                 edtTelefone.setText(cliente.getTelefone());
                 edtEndereco.setText(cliente.getEndereco());
                 btnSalvar.setOnAction((e) -> {
-                    System.out.println("Iniciando verificação");
-                    int id = Float.floatToIntBits(cliente.getId());
-                    String nome = edtNome.getText().toUpperCase().trim();
-                    String telefone = edtTelefone.getText().toUpperCase().trim();
-                    String endereco = edtEndereco.getText().toUpperCase().trim();
-                    String query = null;
-                    if(!(nome.equals(cliente.getNome().toUpperCase().trim()))
-                            && telefone.equals(cliente.getTelefone().trim())
-                            && endereco.equals(cliente.getEndereco().toUpperCase().trim())){
-                        //uppdate nome
-                    }else if(!(telefone.equals(cliente.getTelefone().trim()))
-                            && nome.equals(cliente.getNome().toUpperCase().trim())
-                            && endereco.equals(cliente.getEndereco().toUpperCase().trim())){
-                        //update telefone
-                    }else if(!(endereco.equals(cliente.getEndereco().toUpperCase().trim()))
-                            && nome.equals(cliente.getNome().toUpperCase().trim())
-                            && telefone.equals(cliente.getTelefone().trim())){
-                        //update endereco
-                    }else if(!(nome.equals(cliente.getNome().toUpperCase().trim()))
-                            && !(telefone.equals(cliente.getTelefone().toUpperCase().trim()))
-                            && !(endereco.equals(cliente.getEndereco().toUpperCase().trim()))){
-                        //update Cliente Todo
-                    }
-
-
+                    Bairro bairro = cbBairros.getValue();
+                    Cliente cli = new Cliente(cliente.getId(),
+                            edtNome.getText().toUpperCase().trim() ,
+                            edtEndereco.getText().toUpperCase().trim() ,
+                            bairro,
+                            edtTelefone.getText().toUpperCase().trim(),
+                            cliente.getData_cadastro());
+                    editarCliente(cli);
                 });
                 btnCancelar.setOnAction((event -> {
                     dialog.close();
@@ -607,7 +622,24 @@ public class clientesController implements Initializable {
                 pane.getChildren().add(vboxPrincipal);
                 return pane;
             }
-            public AnchorPane tablePedidosCliente(){
+
+    private void editarCliente(Cliente cli) {
+        System.out.println("Iniciando verificação");
+
+        switch (ClienteService.update(cli)){
+            case 0:
+                dialog.close();
+                JFXDialog dialoginner = AlertDialogModel.alertDialogErro("Houve um problema ao atualizar o produto.", stackPane);
+                dialoginner.show();
+                break;
+            case 2:
+                dialog.close();
+                refreshTable();
+                break;
+        }
+    }
+
+    public AnchorPane tablePedidosCliente(){
                 AnchorPane pane = new AnchorPane();
                 VBox vboxPrincipal = defaultVBox();
                 JFXButton btnSair = defaultButton("SAIR");

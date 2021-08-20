@@ -32,13 +32,34 @@ public class ClienteService {
 
         Type userListType = new TypeToken<ArrayList<Cliente>>(){}.getType();
 
-        ArrayList<Cliente> lista = gson.fromJson(json, userListType);
+        clientes = gson.fromJson(json, userListType);
 
-        for(int i = 0; i<lista.size(); i++){
-            System.out.println(lista.get(i).getNome());
+        for(int i = 0; i<clientes.size(); i++){
+            System.out.println(clientes.get(i).getNome());
         }
 
         return clientes;
     }
 
+    public static String insert(Cliente cliente){
+        Gson gson = new Gson();
+        String input = gson.toJson(cliente);
+        System.out.println("Entrada do POST" + input);
+        String output = DefaultRequests.postObject("/clientes", input);
+        System.out.println("Saida do POST" + output);
+        return output;
+    }
+
+    public static int update( Cliente newObj){
+        Gson gson = new Gson();
+        String json = gson.toJson(newObj);
+
+        return DefaultRequests.putObject("/clientes", json);
+    }
+
+    public static int delete(Long id){
+        int state;
+        state = DefaultRequests.deleteObject(id, "/clientes");
+        return state;
+    }
 }
