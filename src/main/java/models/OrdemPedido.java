@@ -2,7 +2,9 @@ package models;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 public class OrdemPedido implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -15,8 +17,17 @@ public class OrdemPedido implements Serializable {
 
     private String entregador;
 
-    private String forma_pagamento, data_entrada, horario_entrada,
-            horario_triagem, horario_checkout, horario_finalizado;
+    private String forma_pagamento;
+
+    private Date entradaDate;
+
+    private Date entradaHora;
+
+    private Date triagemHora;
+
+    private Date checkoutHora;
+
+    private Date finalizadoHora;
 
     private String fonte_pedido;
     private String caixa_responsavel;
@@ -28,28 +39,24 @@ public class OrdemPedido implements Serializable {
     //4 -- enviado
     //5 -- finalizado
 
-
     private List<Produto> produtos = new ArrayList<>();
 
     public OrdemPedido() {
     }
 
-    public OrdemPedido(Long id, Cliente cliente, Usuario operador, String entregador, String forma_pagamento, String data_entrada, String horario_entrada, String horario_triagem, String horario_checkout, String horario_finalizado, String fonte_pedido, String caixa_responsavel, int status, List<Produto> produtos) {
+    public OrdemPedido(Long id, Cliente cliente, Usuario operador, String entregador, String forma_pagamento,
+                       String fonte_pedido, String caixa_responsavel, int status) {
         this.id = id;
         this.cliente = cliente;
         this.operador = operador;
         this.entregador = entregador;
         this.forma_pagamento = forma_pagamento;
-        this.data_entrada = data_entrada;
-        this.horario_entrada = horario_entrada;
-        this.horario_triagem = horario_triagem;
-        this.horario_checkout = horario_checkout;
-        this.horario_finalizado = horario_finalizado;
         this.fonte_pedido = fonte_pedido;
         this.caixa_responsavel = caixa_responsavel;
         this.status = status;
-        this.produtos = produtos;
     }
+
+
 
     public Long getId() {
         return id;
@@ -65,6 +72,14 @@ public class OrdemPedido implements Serializable {
 
     public void setCliente(Cliente cliente) {
         this.cliente = cliente;
+    }
+
+    public String getForma_pagamento() {
+        return forma_pagamento;
+    }
+
+    public void setForma_pagamento(String forma_pagamento) {
+        this.forma_pagamento = forma_pagamento;
     }
 
     public Usuario getOperador() {
@@ -83,68 +98,12 @@ public class OrdemPedido implements Serializable {
         this.entregador = entregador;
     }
 
-    public String getForma_pagamento() {
-        return forma_pagamento;
-    }
-
-    public void setForma_pagamento(String forma_pagamento) {
-        this.forma_pagamento = forma_pagamento;
-    }
-
-    public String getData_entrada() {
-        return data_entrada;
-    }
-
-    public void setData_entrada(String data_entrada) {
-        this.data_entrada = data_entrada;
-    }
-
-    public String getHorario_entrada() {
-        return horario_entrada;
-    }
-
-    public void setHorario_entrada(String horario_entrada) {
-        this.horario_entrada = horario_entrada;
-    }
-
-    public String getHorario_triagem() {
-        return horario_triagem;
-    }
-
-    public void setHorario_triagem(String horario_triagem) {
-        this.horario_triagem = horario_triagem;
-    }
-
-    public String getHorario_checkout() {
-        return horario_checkout;
-    }
-
-    public void setHorario_checkout(String horario_checkout) {
-        this.horario_checkout = horario_checkout;
-    }
-
-    public String getHorario_finalizado() {
-        return horario_finalizado;
-    }
-
-    public void setHorario_finalizado(String horario_finalizado) {
-        this.horario_finalizado = horario_finalizado;
-    }
-
     public String getFonte_pedido() {
         return fonte_pedido;
     }
 
     public void setFonte_pedido(String fonte_pedido) {
         this.fonte_pedido = fonte_pedido;
-    }
-
-    public String getCaixa_responsavel() {
-        return caixa_responsavel;
-    }
-
-    public void setCaixa_responsavel(String caixa_responsavel) {
-        this.caixa_responsavel = caixa_responsavel;
     }
 
     public int getStatus() {
@@ -161,5 +120,66 @@ public class OrdemPedido implements Serializable {
 
     public void setProdutos(List<Produto> produtos) {
         this.produtos = produtos;
+    }
+
+    public String getCaixa_responsavel() {
+        return caixa_responsavel;
+    }
+
+    public void setCaixa_responsavel(String caixa_responsavel) {
+        this.caixa_responsavel = caixa_responsavel;
+    }
+
+    public Date getEntradaDate() {
+        return entradaDate;
+    }
+
+    public void setEntradaDate(Date entradaDate) {
+        this.entradaDate = entradaDate;
+    }
+
+    public Date getEntradaHora() {
+        return entradaHora;
+    }
+
+    public void setEntradaHora(Date entradaHora) {
+        this.entradaHora = entradaHora;
+    }
+
+    public Date getTriagemHora() {
+        return triagemHora;
+    }
+
+    public void setTriagemHora(Date triagemHora) {
+        this.triagemHora = triagemHora;
+    }
+
+    public Date getCheckoutHora() {
+        return checkoutHora;
+    }
+
+    public void setCheckoutHora(Date checkoutHora) {
+        this.checkoutHora = checkoutHora;
+    }
+
+    public Date getFinalizadoHora() {
+        return finalizadoHora;
+    }
+
+    public void setFinalizadoHora(Date finalizadoHora) {
+        this.finalizadoHora = finalizadoHora;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        OrdemPedido that = (OrdemPedido) o;
+        return status == that.status && Objects.equals(id, that.id) && Objects.equals(cliente, that.cliente) && Objects.equals(operador, that.operador) && Objects.equals(entregador, that.entregador) && Objects.equals(forma_pagamento, that.forma_pagamento) && Objects.equals(entradaDate, that.entradaDate) && Objects.equals(entradaHora, that.entradaHora) && Objects.equals(triagemHora, that.triagemHora) && Objects.equals(checkoutHora, that.checkoutHora) && Objects.equals(finalizadoHora, that.finalizadoHora) && Objects.equals(fonte_pedido, that.fonte_pedido) && Objects.equals(caixa_responsavel, that.caixa_responsavel);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, cliente, operador, entregador, forma_pagamento, entradaDate, entradaHora, triagemHora, checkoutHora, finalizadoHora, fonte_pedido, caixa_responsavel, status);
     }
 }

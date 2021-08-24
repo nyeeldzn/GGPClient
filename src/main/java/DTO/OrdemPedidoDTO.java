@@ -1,6 +1,7 @@
 package DTO;
 
 import models.Cliente;
+import models.OrdemPedido;
 import models.Produto;
 import models.Usuario;
 
@@ -70,7 +71,21 @@ public class OrdemPedidoDTO implements Serializable {
         this.produtos = produtos;
     }
 
-    private Date toDate(String sDate){
+    private OrdemPedido toOrdemPedido(OrdemPedidoDTO pedidoDTO){
+        OrdemPedido pedido = new OrdemPedido(pedidoDTO.getId(), pedidoDTO.getCliente(),
+                pedidoDTO.getOperador(), pedidoDTO.entregador,pedidoDTO.getForma_pagamento(),
+                pedidoDTO.fonte_pedido,pedidoDTO.getCaixa_responsavel(),pedidoDTO.getStatus());
+
+        pedido.setEntradaDate(toDate(pedidoDTO.entradaDate));
+        pedido.setEntradaHora(toTime(pedidoDTO.entradaHora));
+        pedido.setTriagemHora(toTime(pedidoDTO.triagemHora));
+        pedido.setCheckoutHora(toTime(pedidoDTO.checkoutHora));
+        pedido.setFinalizadoHora(toTime(pedidoDTO.finalizadoHora));
+
+        return pedido;
+    }
+
+    public Date toDate(String sDate){
         Date date = null;
         try {
             SimpleDateFormat fDate = new SimpleDateFormat("yyyy-MM-dd");
@@ -81,7 +96,7 @@ public class OrdemPedidoDTO implements Serializable {
         return date;
     }
 
-    private Date toTime(String sTime){
+    public Date toTime(String sTime){
         Date time = null;
         try {
             SimpleDateFormat fTime = new SimpleDateFormat("HH:mm:ss");

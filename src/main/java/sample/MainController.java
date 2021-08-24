@@ -759,26 +759,17 @@ public class MainController implements Initializable {
     //Metodos de Controle
     @FXML
     private void refreshTable(){
-        //
-        //Recuperção entrada
-        //
-            listaPedidos.clear();
-             //recuperar pedido da entrada
-                tablePedido.setItems(listaPedidos);
-                tablePedido.getSortOrder().add(idCol);
-        //
-        //Recuperção triagem
-        //
-            listaPedidosTriagem.clear();
-            //recuperar pedidos triagem
-                tablePedidoTriagem.setItems(listaPedidosTriagem);
-                tablePedidoTriagem.getSortOrder().add(idColTriagem);
-        //Recuperção Finalizado
-        //
-            listaPedidosFinalizado.clear();
-            //recuperar peiddos finalizados
-                tablePedidoFinalizado.setItems(listaPedidosFinalizado);
-                tablePedidoFinalizado.getSortOrder().add(idColFinalizado);
+        listaPedidos.clear();
+        listaPedidosTriagem.clear();
+        listaPedidosFinalizado.clear();
+
+
+        tablePedido.setItems(listaPedidos);
+        tablePedido.getSortOrder().add(idCol);
+        tablePedidoTriagem.setItems(listaPedidosTriagem);
+        tablePedidoTriagem.getSortOrder().add(idColTriagem);
+        tablePedidoFinalizado.setItems(listaPedidosFinalizado);
+        tablePedidoFinalizado.getSortOrder().add(idColFinalizado);
 
     }
     private void intentnovoPedido() {
