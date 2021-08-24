@@ -1,5 +1,6 @@
 package sample;
 
+import Services.PedidoService;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDialog;
@@ -763,6 +764,7 @@ public class MainController implements Initializable {
         listaPedidosTriagem.clear();
         listaPedidosFinalizado.clear();
 
+        listaPedidos = FXCollections.observableArrayList(PedidoService.findAll());
 
         tablePedido.setItems(listaPedidos);
         tablePedido.getSortOrder().add(idCol);

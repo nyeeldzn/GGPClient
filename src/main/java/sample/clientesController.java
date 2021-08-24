@@ -240,17 +240,17 @@ public class clientesController implements Initializable {
             int selectedTable = 0;
             System.out.println("Pedido de status: " + pedido.getStatus()
                     + " Horario de triagem: "
-                    + pedido.getHorario_entrada()
+                    + pedido.getTriagemHora()
                     + " Horario checkout: "
-                    + pedido.getHorario_triagem()
+                    + pedido.getCheckoutHora()
                     + " Horario de finalizaçao: "
-                    + pedido.getHorario_finalizado());
+                    + pedido.getFinalizadoHora());
 
-            if(pedido.getStatus() == 1 && pedido.getHorario_triagem().equals("")){
+            if(pedido.getStatus() == 1 && pedido.getTriagemHora().equals("")){
                 //table 1
                 selectedTable = 1;
                 System.out.println("Pedido na tabela 1");
-            }else if(pedido.getStatus() == 1 && !(pedido.getHorario_triagem().equals(""))){
+            }else if(pedido.getStatus() == 1 && !(pedido.getTriagemHora().equals(""))){
                 //table 2
                 selectedTable = 2;
                 System.out.println("Pedido na tabela 2");
@@ -423,16 +423,16 @@ public class clientesController implements Initializable {
                 label = new Label(3, linha, listaTabela.get(linha- 1).getCliente().getTelefone());
                 aba.setColumnView(3, 14);
                 aba.addCell(label);
-                label = new Label(4, linha, listaTabela.get(linha- 1).getData_entrada());
+                label = new Label(4, linha, listaTabela.get(linha- 1).getEntradaDate().toString());
                 aba.setColumnView(4, 10);
                 aba.addCell(label);
-                label = new Label(5, linha, listaTabela.get(linha- 1).getHorario_entrada());
+                label = new Label(5, linha, listaTabela.get(linha- 1).getEntradaHora().toString());
                 aba.addCell(label);
-                label = new Label(6, linha, listaTabela.get(linha- 1).getHorario_triagem());
+                label = new Label(6, linha, listaTabela.get(linha- 1).getTriagemHora().toString());
                 aba.addCell(label);
-                label = new Label(7, linha, listaTabela.get(linha- 1).getHorario_checkout());
+                label = new Label(7, linha, listaTabela.get(linha- 1).getCheckoutHora().toString());
                 aba.addCell(label);
-                label = new Label(8, linha, listaTabela.get(linha- 1).getHorario_finalizado());
+                label = new Label(8, linha, listaTabela.get(linha- 1).getFinalizadoHora().toString());
                 aba.addCell(label);
             }
 

@@ -1,5 +1,6 @@
 package Services;
 
+import DTO.OrdemPedidoDTO;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import helpers.HTTPRequest.DefaultRequests;
@@ -24,21 +25,31 @@ public class PedidoService {
             return ped;
         }
 
+
         public static ArrayList<OrdemPedido> findAll(){
+            ArrayList<OrdemPedidoDTO> pedidosDTO = findAllDTO();
             ArrayList<OrdemPedido> pedidos = new ArrayList<>();
-            String json = DefaultRequests.getAll("/'pedidos'");
-
-            Gson gson = new Gson();
-
-            Type userListType = new TypeToken<ArrayList<OrdemPedido>>(){}.getType();
-
-            pedidos = gson.fromJson(json, userListType);
-
-            for(int i = 0; i<pedidos.size(); i++){
-                System.out.println("Pedido de id: " + pedidos.get(i).getId() + " recuperado." );
+            for(int i = 0; i<pedidosDTO.size(); i++){
+                pedidos.add(OrdemPedidoDTO.toOrdemPedido(pedidosDTO.get(i)));
             }
 
             return pedidos;
+        }
+        public static ArrayList<OrdemPedidoDTO> findAllDTO(){
+            ArrayList<OrdemPedidoDTO> pedidosDTO = new ArrayList<>();
+            String json = DefaultRequests.getAll("/pedidos");
+
+            Gson gson = new Gson();
+
+            Type userListType = new TypeToken<ArrayList<OrdemPedidoDTO>>(){}.getType();
+
+            pedidosDTO = gson.fromJson(json, userListType);
+
+            for(int i = 0; i<pedidosDTO.size(); i++){
+                System.out.println("Pedido de id: " + pedidosDTO.get(i).getId() + " recuperado." );
+            }
+
+            return pedidosDTO;
         }
 
         public static String insert(OrdemPedido pedido){

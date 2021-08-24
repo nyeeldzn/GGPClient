@@ -327,8 +327,8 @@ public class  detalhesPedidoController implements Initializable {
             document.add(new Paragraph("-Endereço:    " + pedido.getCliente().getEndereco()));
             document.add(new Paragraph("-Telefone:    " + pedido.getCliente().getTelefone()));
             document.add(new Paragraph("-F. de Pag.:  " + pedido.getForma_pagamento()));
-            document.add(new Paragraph("-D. Entrada:    " + pedido.getData_entrada()));
-            document.add(new Paragraph("-H. Triagem:    " + pedido.getHorario_triagem()));
+            document.add(new Paragraph("-D. Entrada:    " + pedido.getEntradaDate()));
+            document.add(new Paragraph("-H. Triagem:    " + pedido.getTriagemHora()));
             document.add(new Paragraph("=============================="));
             document.add(new Paragraph("  Qtd.                   Item no.   "));
             document.add(new Paragraph("=============================="));

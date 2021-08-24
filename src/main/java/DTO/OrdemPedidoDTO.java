@@ -71,7 +71,7 @@ public class OrdemPedidoDTO implements Serializable {
         this.produtos = produtos;
     }
 
-    private OrdemPedido toOrdemPedido(OrdemPedidoDTO pedidoDTO){
+    public static OrdemPedido toOrdemPedido(OrdemPedidoDTO pedidoDTO){
         OrdemPedido pedido = new OrdemPedido(pedidoDTO.getId(), pedidoDTO.getCliente(),
                 pedidoDTO.getOperador(), pedidoDTO.entregador,pedidoDTO.getForma_pagamento(),
                 pedidoDTO.fonte_pedido,pedidoDTO.getCaixa_responsavel(),pedidoDTO.getStatus());
@@ -85,7 +85,7 @@ public class OrdemPedidoDTO implements Serializable {
         return pedido;
     }
 
-    public Date toDate(String sDate){
+    public static Date toDate(String sDate){
         Date date = null;
         try {
             SimpleDateFormat fDate = new SimpleDateFormat("yyyy-MM-dd");
@@ -96,7 +96,7 @@ public class OrdemPedidoDTO implements Serializable {
         return date;
     }
 
-    public Date toTime(String sTime){
+    public static Date toTime(String sTime){
         Date time = null;
         try {
             SimpleDateFormat fTime = new SimpleDateFormat("HH:mm:ss");
