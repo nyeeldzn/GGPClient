@@ -1,4 +1,4 @@
-package sample;
+package sample.MainController.Produtos;
 
 import Services.ProdutoService;
 import com.jfoenix.controls.JFXButton;
@@ -40,6 +40,7 @@ import jxl.Workbook;
 import jxl.format.Colour;
 import jxl.write.*;
 import models.Produto;
+import sample.MainController.MainController;
 
 import java.io.File;
 import java.io.IOException;

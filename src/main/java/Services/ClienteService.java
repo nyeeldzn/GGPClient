@@ -14,7 +14,7 @@ public class ClienteService {
     public static Cliente getById(Long id){
         Cliente cli = new Cliente();
         try {
-            String json = DefaultRequests.getObject(id, "/clientes");
+            String json = DefaultRequests.getObject(id.toString(), "/clientes");
 
             Gson gson = new Gson();
             cli = gson.fromJson(new String(json.getBytes()), Cliente.class);
@@ -23,6 +23,29 @@ public class ClienteService {
         }
         return cli;
     }
+
+    public static ArrayList<Cliente> getByNome(String nome){
+        ArrayList<Cliente> clientes = new ArrayList<>();
+
+        Cliente cli = new Cliente();
+        cli.setNome(nome);
+        Gson gson = new Gson();
+        String input = gson.toJson(cli);
+
+        String json = DefaultRequests.getObjectWithBody("/clientes/buscaPorNome", input);
+
+        Gson returnJson = new Gson();
+
+        Type userListType = new TypeToken<ArrayList<Cliente>>(){}.getType();
+
+        clientes = returnJson.fromJson(json, userListType);
+
+        for(int i = 0; i<clientes.size(); i++){
+            System.out.println(clientes.get(i).getNome());
+        }
+        return clientes;
+    }
+
 
     public static ArrayList<Cliente> findAll(){
         ArrayList<Cliente> clientes = new ArrayList<>();
@@ -41,13 +64,15 @@ public class ClienteService {
         return clientes;
     }
 
-    public static String insert(Cliente cliente){
+    public static Cliente insert(Cliente cliente){
         Gson gson = new Gson();
         String input = gson.toJson(cliente);
         System.out.println("Entrada do POST" + input);
         String output = DefaultRequests.postObject("/clientes", input);
         System.out.println("Saida do POST" + output);
-        return output;
+        Gson cliJson = new Gson();
+        Cliente cli = cliJson.fromJson(new String(output.getBytes()), Cliente.class);
+        return cli;
     }
 
     public static int update( Cliente newObj){

@@ -28,4 +28,19 @@ public class AlertDialogModel {
         return dialogErro;
     }
 
+    public static JFXDialog alertDialogAction(String erro, StackPane stackPane, JFXButton accept) {
+        JFXDialogLayout dialogLayout = new JFXDialogLayout();
+        JFXDialog dialogErro = new JFXDialog(stackPane, dialogLayout, JFXDialog.DialogTransition.CENTER);
+        Text texto = new Text();
+        JFXButton cancel = new JFXButton("CANCELAR");
+        texto.setText(erro);
+        texto.setFont(Font.font("verdana", FontWeight.LIGHT, FontPosture.REGULAR, 20));
+        cancel.addEventHandler(MouseEvent.MOUSE_CLICKED, (MouseEvent event) ->{
+            dialogErro.close();
+        });
+        dialogLayout.setBody(texto);
+        dialogLayout.setActions(cancel, accept);
+        //dialogErro.show();
+        return dialogErro;
+    }
 }

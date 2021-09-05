@@ -1,4 +1,4 @@
-package sample;
+package sample.MainController.Clientes;
 
 import Services.BairroService;
 import Services.ClienteService;
@@ -43,6 +43,7 @@ import models.Bairro;
 import models.Cliente;
 import models.OrdemPedido;
 import models.Usuario;
+import sample.MainController.MainController;
 
 import java.io.File;
 import java.io.IOException;

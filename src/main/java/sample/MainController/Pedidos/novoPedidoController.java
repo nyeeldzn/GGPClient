@@ -1,5 +1,8 @@
-package sample;
+package sample.MainController.Pedidos;
 
+import Services.BairroService;
+import Services.ClienteService;
+import Services.PedidoService;
 import com.jfoenix.controls.*;
 import helpers.AlertDialogModel;
 import javafx.beans.value.ChangeListener;
@@ -8,6 +11,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -29,13 +33,10 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import models.Bairro;
 import models.Cliente;
+import models.OrdemPedido;
 import models.Usuario;
 
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -44,6 +45,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class novoPedidoController implements Initializable {
@@ -58,16 +60,13 @@ public class novoPedidoController implements Initializable {
     private JFXTextField edtEndereco;
 
     @FXML
+    private JFXComboBox<Bairro> cb_Bairro;
+
+    @FXML
     private JFXTextField edtTel;
 
     @FXML
     private JFXTextField edtFormaPagamento;
-
-    @FXML
-    private JFXTextField edtFormaEnvio;
-
-    @FXML
-    private JFXTextField edtCasoFalta;
 
     @FXML
     private JFXTextField edtTroco;
@@ -105,15 +104,10 @@ public class novoPedidoController implements Initializable {
     @FXML
     private JFXTextField edtEntregador;
 
-    @FXML
-    private JFXComboBox cbStatus;
-
 
     @FXML
     private HBox hboxManual;
 
-    @FXML
-    private JFXButton btnClientePesquisa;
 
     JFXTextField edtSearch;
     JFXDialog dialog;
@@ -124,42 +118,43 @@ public class novoPedidoController implements Initializable {
     private JFXButton btnCancelar;
 
     int selectedIndex;
-    String query = null;
     int cliente_id = 0;
-    Connection connection = null;
-    PreparedStatement preparedStatement = null;
-    ResultSet resultSet = null;
-    Usuario user;
 
     ObservableList<Cliente> clientes = FXCollections.observableArrayList();
+    ObservableList<Bairro> bairros = FXCollections.observableArrayList();
     FilteredList<Cliente> filteredData;
 
     Cliente selected_Cliente;
 
-    String clienteNome, clienteEndereco, clienteTelefone, formaEntrega, formaPagamento, casoFalta, data_entrada, fonte;
-    int clienteid;
+    OrdemPedido pedidoAtual = new OrdemPedido();
     double troco;
-    int id;
     String dataAtual;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         //recuperar usuario logado
 
-        try {
-            recuperarClientes();
-        } catch (SQLException exception) {
-            exception.printStackTrace();
-        }
+        recuperarClientes();
+        recuperarBairros();
 
         setupComponentes();
     }
 
+
+
     //Metodos Iniciais
-    private void recuperarClientes() throws SQLException {
+    private void recuperarClientes() {
         clientes.clear();
+        clientes = FXCollections.observableArrayList(ClienteService.findAll());
         //recuperar todos os clientes
     }
+
+    private void recuperarBairros() {
+        bairros.clear();
+        bairros = FXCollections.observableArrayList(BairroService.findAll());
+        cb_Bairro.getItems().addAll(bairros);
+    }
+
     private void setupComponentes() {
         edtNome.setTextFormatter(new TextFormatter<Object>((change) -> {
             change.setText(change.getText().toUpperCase());
@@ -168,8 +163,6 @@ public class novoPedidoController implements Initializable {
 
         setupEdtCliente();
         setupEdtFormaPag();
-        setupEdtFormaEnvio();
-        setupEdtCasoFalta();
         setupEdtOrigem();
 
         checkBoxManual.setOnMouseClicked((e) -> {
@@ -191,15 +184,11 @@ public class novoPedidoController implements Initializable {
             return change;
         }));
         edtTel.setOnKeyPressed((e) -> {
-            Cliente cliente = new Cliente(Long.parseLong(String.valueOf(cliente_id)),clienteNome,clienteEndereco,new Bairro(),"","");
             switch (e.getCode()){
                 case ENTER:
                     edtFormaPagamento.requestFocus();
-                    verificarClienteExistente(cliente);
                     break;
-                case TAB:
-                    verificarClienteExistente(cliente);
-                    break;
+
             }
         });
         edtTel.setTextFormatter(new TextFormatter<Object>((change) -> {
@@ -210,14 +199,15 @@ public class novoPedidoController implements Initializable {
             change.setText(change.getText().toUpperCase());
             return change;
         }));
-        edtFormaEnvio.setTextFormatter(new TextFormatter<Object>((change) -> {
-            change.setText(change.getText().toUpperCase());
-            return change;
-        }));
-        edtCasoFalta.setTextFormatter(new TextFormatter<Object>((change) -> {
-            change.setText(change.getText().toUpperCase());
-            return change;
-        }));
+
+        edtFormaPagamento.setOnKeyPressed((e) -> {
+            switch (e.getCode()){
+                case ENTER:
+                    edtTroco.requestFocus();
+                    break;
+            }
+        });
+
         edtTroco.setOnKeyPressed((e) -> {
             switch (e.getCode()){
                 case ENTER:
@@ -229,45 +219,12 @@ public class novoPedidoController implements Initializable {
             change.setText(change.getText().toUpperCase());
             return change;
         }));
-        edtFormaPagamento.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            Cliente cliente = new Cliente(Long.parseLong(String.valueOf(cliente_id)),clienteNome,clienteEndereco,new Bairro(),"","");
-            @Override
-            public void handle(MouseEvent event) {
-                verificarClienteExistente(cliente);
-            }
-        });
-        edtCasoFalta.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                Cliente cliente = new Cliente(Long.parseLong(String.valueOf(cliente_id)),clienteNome,clienteEndereco,new Bairro(),"","");
-                verificarClienteExistente(cliente);
-            }
-        });
-        edtFormaEnvio.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                Cliente cliente = new Cliente(Long.parseLong(String.valueOf(cliente_id)),clienteNome,clienteEndereco,new Bairro(),"","");
-                verificarClienteExistente(cliente);
-            }
-        });
-        edtTroco.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                Cliente cliente = new Cliente(Long.parseLong(String.valueOf(cliente_id)),clienteNome,clienteEndereco,new Bairro(),"","");
-                verificarClienteExistente(cliente);
-            }
-        });
+
         edtFonte.setTextFormatter(new TextFormatter<Object>((change) -> {
             change.setText(change.getText().toUpperCase());
             return change;
         }));
-        edtFonte.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                Cliente cliente = new Cliente(Long.parseLong(String.valueOf(cliente_id)),clienteNome,clienteEndereco,new Bairro(),"","");
-                verificarClienteExistente(cliente);
-            }
-        });
+
         edtFonte.setOnKeyPressed((e) -> {
             switch (e.getCode()){
                 case ENTER:
@@ -339,25 +296,25 @@ public class novoPedidoController implements Initializable {
                     break;
             }
         });
-        btnCancelar.setOnAction((e) -> {
-            fecharJanela();
-        });
+        btnCancelar.setOnAction((e) -> fecharJanela());
 
         btnSalvar.setOnKeyPressed((e) -> {
             switch (e.getCode()){
                 case ENTER:
+                    verificarClienteExistente(edtNome.getText());
+                    pedidoAtual.setCliente(selected_Cliente);
                     salvarPedido();
                     break;
             }
         });
         btnSalvar.setOnAction((e) -> {
+            verificarClienteExistente(edtNome.getText());
+            pedidoAtual.setCliente(selected_Cliente);
             salvarPedido();
-        });
-        btnClientePesquisa.setOnAction((e) ->{
-            alertDialogClientes();
         });
 
     }
+
 
     private void setupEdtCliente() {
         ArrayList<String> nomes = new ArrayList<>();
@@ -365,20 +322,21 @@ public class novoPedidoController implements Initializable {
             nomes.add(clientes.get(i).getNome());
         }
 
-        JFXAutoCompletePopup<String> autoCompletePopup = new JFXAutoCompletePopup<>();
+        JFXAutoCompletePopup<Cliente> autoCompletePopup = new JFXAutoCompletePopup<>();
         autoCompletePopup.setPrefWidth(500);
-        autoCompletePopup.getSuggestions().addAll(nomes);
+        autoCompletePopup.getSuggestions().addAll(clientes);
 
         autoCompletePopup.setSelectionHandler(event -> {
-            edtNome.setText(event.getObject());
+            edtNome.setText(event.getObject().getNome());
             edtEndereco.requestFocus();
-            recuperarClienteSelecionado(event.getObject());
+            selected_Cliente = event.getObject();
+            setClienteDetalhes(event.getObject());
             // you can do other actions here when text completed
         });
 
         // filtering options
         edtNome.textProperty().addListener(observable -> {
-            autoCompletePopup.filter(string -> string.toLowerCase().contains(edtNome.getText().toLowerCase()));
+            autoCompletePopup.filter(string -> string.getNome().toLowerCase().contains(edtNome.getText().toLowerCase()));
             if (autoCompletePopup.getFilteredSuggestions().isEmpty() || edtNome.getText().isEmpty()) {
                 autoCompletePopup.hide();
                 // if you remove textField.getText.isEmpty() when text field is empty it suggests all options
@@ -387,7 +345,11 @@ public class novoPedidoController implements Initializable {
                 autoCompletePopup.show(edtNome);
             }
         });
+
+
     }
+
+
     private void setupEdtFormaPag() {
         ArrayList<String> nomes = new ArrayList<>();
         nomes.add("DINHEIRO");
@@ -401,7 +363,7 @@ public class novoPedidoController implements Initializable {
 
         autoCompletePopup.setSelectionHandler(event -> {
             edtFormaPagamento.setText(event.getObject());
-            edtFormaEnvio.requestFocus();
+            edtTroco.requestFocus();
             //recuperarClienteSelecionado(event.getObject());
             // you can do other actions here when text completed
         });
@@ -415,62 +377,6 @@ public class novoPedidoController implements Initializable {
                 // so you can choose
             } else {
                 autoCompletePopup.show(edtFormaPagamento);
-            }
-        });
-    }
-    private void setupEdtFormaEnvio() {
-        ArrayList<String> nomes = new ArrayList<>();
-        nomes.add("ENTREGA");
-        nomes.add("RETIRADA");
-
-        JFXAutoCompletePopup<String> autoCompletePopup = new JFXAutoCompletePopup<>();
-        autoCompletePopup.setPrefWidth(90);
-        autoCompletePopup.getSuggestions().addAll(nomes);
-
-        autoCompletePopup.setSelectionHandler(event -> {
-            edtFormaEnvio.setText(event.getObject());
-            edtCasoFalta.requestFocus();
-            //recuperarClienteSelecionado(event.getObject());
-            // you can do other actions here when text completed
-        });
-
-        // filtering options
-        edtFormaEnvio.textProperty().addListener(observable -> {
-            autoCompletePopup.filter(string -> string.toLowerCase().contains(edtFormaEnvio.getText().toLowerCase()));
-            if (autoCompletePopup.getFilteredSuggestions().isEmpty() || edtFormaEnvio.getText().isEmpty()) {
-                autoCompletePopup.hide();
-                // if you remove textField.getText.isEmpty() when text field is empty it suggests all options
-                // so you can choose
-            } else {
-                autoCompletePopup.show(edtFormaEnvio);
-            }
-        });
-    }
-    private void setupEdtCasoFalta() {
-        ArrayList<String> nomes = new ArrayList<>();
-        nomes.add("LIGACAO");
-        nomes.add("SUBSTITUIR POR SIMILAR");
-
-        JFXAutoCompletePopup<String> autoCompletePopup = new JFXAutoCompletePopup<>();
-        autoCompletePopup.setPrefWidth(130);
-        autoCompletePopup.getSuggestions().addAll(nomes);
-
-        autoCompletePopup.setSelectionHandler(event -> {
-            edtCasoFalta.setText(event.getObject());
-            edtTroco.requestFocus();
-            //recuperarClienteSelecionado(event.getObject());
-            // you can do other actions here when text completed
-        });
-
-        // filtering options
-        edtCasoFalta.textProperty().addListener(observable -> {
-            autoCompletePopup.filter(string -> string.toLowerCase().contains(edtCasoFalta.getText().toLowerCase()));
-            if (autoCompletePopup.getFilteredSuggestions().isEmpty() || edtCasoFalta.getText().isEmpty()) {
-                autoCompletePopup.hide();
-                // if you remove textField.getText.isEmpty() when text field is empty it suggests all options
-                // so you can choose
-            } else {
-                autoCompletePopup.show(edtCasoFalta);
             }
         });
     }
@@ -508,12 +414,13 @@ public class novoPedidoController implements Initializable {
 
 
 
-    private void recuperarClienteSelecionado(String nomeSelecionado) {
-        Cliente clienteSelecionado = new Cliente();
+    private void setClienteDetalhes(Cliente cli) {
         //recuperar cliente selecionado
-        edtTel.setText(clienteSelecionado.getTelefone());
-        edtEndereco.setText(clienteSelecionado.getEndereco());
+        edtTel.setText(cli.getTelefone());
+        edtEndereco.setText(cli.getEndereco());
         edtEndereco.requestFocus();
+        //System.out.println("Bairro recuperado: ID:" + bairro.getId() + "Nome: " + bairro.getNome());
+        cb_Bairro.getSelectionModel().select(cli.getBairro().getId().intValue() - 1);
     }
     //Metodos Iniciais
 
@@ -543,33 +450,32 @@ public class novoPedidoController implements Initializable {
         });
     }
     private void salvarPedido(){
-        clienteNome = edtNome.getText();
-        clienteEndereco = edtEndereco.getText();
-        clienteTelefone = edtTel.getText();
-        formaEntrega = edtFormaEnvio.getText();
-        formaPagamento = edtFormaPagamento.getText();
-        casoFalta = edtCasoFalta.getText();
-        fonte = edtFonte.getText();
-        if(edtTroco.getText() != null && !(edtTroco.getText().isEmpty())){
-            troco = Double.parseDouble(edtTroco.getText());
-        }
+        SimpleDateFormat format = new SimpleDateFormat("dd-MM-YYYY");
+        Date date = new Date();
+        Date horario = new Date(System.currentTimeMillis());
+
+        pedidoAtual.setForma_pagamento(edtFormaPagamento.getText());
+        pedidoAtual.setFonte_pedido(edtFonte.getText());
+        pedidoAtual.setEntradaDate(date);
+        pedidoAtual.setEntradaHora(horario);
+        pedidoAtual.setTriagemHora(horario);
+        pedidoAtual.setCheckoutHora(horario);
+        pedidoAtual.setFinalizadoHora(horario);
+        pedidoAtual.setOperador(new Usuario(5L,"daniel",1));
+
         if (checkBoxManual.isSelected() == false) {
-            if(clienteNome.isEmpty() || clienteEndereco.isEmpty() || clienteTelefone.isEmpty() ||
-                    formaEntrega.isEmpty() || formaPagamento.isEmpty() || casoFalta.isEmpty() || fonte.isEmpty()){
+            if(pedidoAtual.getForma_pagamento().isEmpty() ||  pedidoAtual.getFonte_pedido().isEmpty()){
                 alertDialogErro("Preencha todos os Campos!");
-            }else if(clienteNome.length() > 155 || clienteEndereco.length() > 500 || clienteTelefone.length() > 55 ){
-                alertDialogErro("Os campos excedem o tamanho de maximo de caracteres.");
             }else{
                 verificarCheckboxManual();
             }
         }else{
-            if(clienteNome.isEmpty() || clienteEndereco.isEmpty() || clienteTelefone.isEmpty() ||
-                    formaEntrega.isEmpty() || formaPagamento.isEmpty() || casoFalta.isEmpty() || fonte.isEmpty()
+            if(pedidoAtual.getForma_pagamento().isEmpty() ||  pedidoAtual.getFonte_pedido().isEmpty()
             || timePickerEntrada.getPromptText().isEmpty()|| timePickerTriagem.getPromptText().isEmpty() || timePickerCheckout.getPromptText().isEmpty()
             || timePickerSaida.getPromptText().isEmpty() || timePickerFinalizado.getPromptText().isEmpty() || edtCaixa.getText().isEmpty()
                     || edtEntregador.getText().isEmpty()){
                 alertDialogErro("Preencha todos os Campos!");
-            }else if(clienteNome.length() > 155 || clienteEndereco.length() > 500 || clienteTelefone.length() > 55 ){
+            }else if((selected_Cliente.getNome().length() > 155 || selected_Cliente.getEndereco().length() > 500 || selected_Cliente.getTelefone().length() > 55 )){
                 alertDialogErro("Os campos excedem o tamanho de maximo de caracteres.");
             }else{
                 verificarCheckboxManual();
@@ -580,7 +486,7 @@ public class novoPedidoController implements Initializable {
     }
     private void verificarCheckboxManual (){
         if (checkBoxManual.isSelected()) {
-            insertPedidoManual();
+            //insertPedidoManual();
         }else{
             insertPedido();
         }
@@ -591,7 +497,7 @@ public class novoPedidoController implements Initializable {
         Date horario = new Date(System.currentTimeMillis());
         SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
         String horario_entrada = format.format(horario);
-        data_entrada = dateFormat.format(date);
+        //data_entrada = dateFormat.format(date);
         LocalDate data = datePickerEntrada.getValue();
         String dataInformada = data.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
@@ -619,50 +525,64 @@ public class novoPedidoController implements Initializable {
         }
     }
     private void insertPedido() {
-
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        Date date = new Date();
-        Date horario = new Date(System.currentTimeMillis());
-        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
-        String horario_entrada = format.format(horario);
-        System.out.println(dateFormat.format(date));
-        System.out.println(horario_entrada);
-        data_entrada = dateFormat.format(date);
-
+        //data_entrada = dateFormat.format(date);
+        System.out.println("PId: " + pedidoAtual.getId());
+        System.out.println("CId: " + pedidoAtual.getCliente().getId());
+        System.out.println("CNome: " + pedidoAtual.getCliente().getNome());
+        System.out.println("Pag: " + pedidoAtual.getForma_pagamento());
+        System.out.println("HR: " + pedidoAtual.getEntradaHora());
+        System.out.println("DT: " + pedidoAtual.getEntradaDate());
+        System.out.println("OP: " + pedidoAtual.getOperador());
         //inserir pedido
-        //boolean state = db_crud.metodoInsertPedido(pedido, query);
-        if(true){
-            //boolean state2 = db_crud.metodoClienteAddPedido(clienteAtual.getId(), clienteAtual.getQtdPedidos());
-            if(true){
-                fecharJanela();
-            }else{
-             JFXDialog alert = AlertDialogModel.alertDialogErro("Houve um problema ao adicionar um novo pedido na contagem do cliente", stackPane);
-                alert.show();
-            }
 
+        OrdemPedido newPed = PedidoService.insert(pedidoAtual);
+        if(newPed != null){
+            //Adicionar Contagem ao cliente
+            //boolean state2 = db_crud.metodoClienteAddPedido(clienteAtual.getId(), clienteAtual.getQtdPedidos());
+            fecharJanela();
         }else{
             JFXDialog dialog = AlertDialogModel.alertDialogErro("Houve um problema ao tentar incluir pedido", stackPane);
             dialog.show();
         }
     }
-    private void verificarClienteExistente(Cliente cliente) {
+    private Cliente verificarClienteExistente(String nome) {
         //verificar cliente existente
+        List<Cliente> clientes = ClienteService.getByNome(nome);
+        if(clientes.size() <= 0){
+            JFXButton buttonConfirmar = new JFXButton("OK");
+            JFXDialog dialog = AlertDialogModel.alertDialogAction("Cliente nao existente, deseja criar um novo?",stackPane, buttonConfirmar);
+            buttonConfirmar.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    System.out.println("Criando cliente");
+                    Cliente newCliente = new Cliente(null, edtNome.getText(),edtEndereco.getText(),cb_Bairro.getValue(),edtTel.getText(),null);
+                    criarCliente(newCliente);
+                    dialog.close();
+                }
+            });
+            dialog.show();
+        }else{
+            System.out.println("Cliente ja existe");
+            selected_Cliente = clientes.get(0);
+            return clientes.get(0);
+        }
+        return null;
     }
-    private void criarCliente() throws SQLException {
-        String cliente_nome = edtNome.getText().toUpperCase().toUpperCase().trim();
-        String cliente_endereco = edtEndereco.getText().toUpperCase().trim();
-        String cliente_telefone = edtTel.getText().toUpperCase().trim();
+    private void criarCliente(Cliente cli){
         SimpleDateFormat format = new SimpleDateFormat("dd-MM-YYYY");
         Date data = new Date();
         String data_cadastro = format.format(data);
-        if(cliente_nome.length() < 150 && cliente_endereco.length() < 150 && cliente_telefone.length() < 150){
-            if(!(cliente_nome.equals("") && !(cliente_endereco.equals("")) && !(cliente_telefone.equals("")))){
+        if(cli.getNome().length() < 150 && cli.getEndereco().length() < 150 && cli.getTelefone().length() < 150){
+            if(!(cli.getNome().equals("") && !(cli.getEndereco().equals("")) && !(cli.getTelefone().equals("")))){
                 //inserir pedido
-                boolean state = false;
-                if(state){
+                cli.setData_cadastro(data_cadastro);
+                Cliente newCli = ClienteService.insert(cli);
+                if(!(newCli.getNome().equals("") && newCli.getEndereco().equals("")
+                        && newCli.getTelefone().equals("") && newCli.getData_cadastro().equals(""))){
                     System.out.println("Cliente Criado com Sucesso");
                     recuperarClientes();
-                    dialog.close();
+                    selected_Cliente = newCli;
+                    alertDialogErro("Cliente Criado com sucesso!");
                 }else{
                     System.out.println("Houve um erro");
                     alertDialogErro("Houve um problema ao criar novo Cliente");
@@ -678,6 +598,7 @@ public class novoPedidoController implements Initializable {
     //Metodos de Negocios
 
     //Objetos
+
     private void alertDialogClientes() {
         selectedIndex = 0;
         JFXDialogLayout dialogLayout = new JFXDialogLayout();
@@ -772,10 +693,8 @@ public class novoPedidoController implements Initializable {
         edtEndereco.clear();
         edtNome.clear();
         edtTel.clear();
-        edtFormaEnvio.clear();
         edtFonte.clear();
         edtTroco.clear();
-        edtCasoFalta.clear();
         edtFormaPagamento.clear();
         edtNome.requestFocus();
     }

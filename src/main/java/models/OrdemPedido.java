@@ -1,6 +1,8 @@
 package models;
 
 import java.io.Serializable;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -19,15 +21,15 @@ public class OrdemPedido implements Serializable {
 
     private String forma_pagamento;
 
-    private Date entradaDate;
+    private String entradaDate;
 
-    private Date entradaHora;
+    private String entradaHora;
 
-    private Date triagemHora;
+    private String triagemHora;
 
-    private Date checkoutHora;
+    private String checkoutHora;
 
-    private Date finalizadoHora;
+    private String finalizadoHora;
 
     private String fonte_pedido;
     private String caixa_responsavel;
@@ -131,43 +133,83 @@ public class OrdemPedido implements Serializable {
     }
 
     public Date getEntradaDate() {
-        return entradaDate;
+        Date strr = null;
+        SimpleDateFormat format = new SimpleDateFormat("yyyy:MM:dd");
+        try {
+            strr = format.parse(entradaDate);
+        }catch (ParseException e){
+            e.printStackTrace();
+        }
+        return strr;
     }
 
     public void setEntradaDate(Date entradaDate) {
-        this.entradaDate = entradaDate;
+        SimpleDateFormat format = new SimpleDateFormat("yyyy:MM:dd");
+        this.entradaDate = format.format(entradaDate);
     }
 
     public Date getEntradaHora() {
-        return entradaHora;
+        Date strr = null;
+        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        try {
+            strr = format.parse(entradaHora);
+        }catch (ParseException e){
+            e.printStackTrace();
+        }
+        return strr;
     }
 
     public void setEntradaHora(Date entradaHora) {
-        this.entradaHora = entradaHora;
+        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        this.entradaHora = format.format(entradaHora);
     }
 
     public Date getTriagemHora() {
-        return triagemHora;
+        Date strr = null;
+        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        try {
+            strr = format.parse(triagemHora);
+        }catch (ParseException e){
+            e.printStackTrace();
+        }
+        return strr;
     }
 
     public void setTriagemHora(Date triagemHora) {
-        this.triagemHora = triagemHora;
+        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        this.triagemHora = format.format(triagemHora);
     }
 
     public Date getCheckoutHora() {
-        return checkoutHora;
+        Date strr = null;
+        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        try {
+            strr = format.parse(checkoutHora);
+        }catch (ParseException e){
+            e.printStackTrace();
+        }
+        return strr;
     }
 
     public void setCheckoutHora(Date checkoutHora) {
-        this.checkoutHora = checkoutHora;
+        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        this.checkoutHora = format.format(checkoutHora);
     }
 
     public Date getFinalizadoHora() {
-        return finalizadoHora;
+        Date strr = null;
+        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        try {
+            strr = format.parse(finalizadoHora);
+        }catch (ParseException e){
+            e.printStackTrace();
+        }
+        return strr;
     }
 
     public void setFinalizadoHora(Date finalizadoHora) {
-        this.finalizadoHora = finalizadoHora;
+        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        this.finalizadoHora = format.format(finalizadoHora);
     }
 
     @Override

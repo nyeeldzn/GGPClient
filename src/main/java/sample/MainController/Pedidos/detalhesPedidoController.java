@@ -1,4 +1,4 @@
-package sample;
+package sample.MainController.Pedidos;
 
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;

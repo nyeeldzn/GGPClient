@@ -1,6 +1,5 @@
 package sample;
 
-import Services.ClienteService;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXDialog;
 import com.jfoenix.controls.JFXPasswordField;
@@ -60,16 +59,21 @@ public class LoginLogoutController implements Initializable {
         edtPassword.setOnKeyPressed((e) -> {
             switch (e.getCode()){
                 case ENTER:
-                    authMethod();
+                    btnLogin.requestFocus();
                     break;
             }
         });
 
         btnLogin.setOnAction((e) -> {
-            //iniciarHome();
+            authMethod();
             //authMethod();
-            ClienteService.findAll();
-            ClienteService.getById(1L);
+        });
+        btnLogin.setOnKeyPressed((e) -> {
+            switch (e.getCode()){
+                case ENTER:
+                    authMethod();
+                    break;
+            }
         });
 
         btnClose.setOnAction((e) -> {

@@ -15,9 +15,9 @@ public class DefaultRequests {
         rootUrl = url;
     }
 
-    public static String getObject(Long id, String node) throws IOException {
+    public static String getObject(String variable, String node) throws IOException {
 
-        conn = (HttpURLConnection) new URL(rootUrl + node + "/" + id).openConnection();
+        conn = (HttpURLConnection) new URL(rootUrl + node + "/" + variable).openConnection();
 
         String output = "";
         try {
@@ -80,6 +80,48 @@ public class DefaultRequests {
         System.out.println("JSON de SAIDA" + output);
         return output;
     }
+
+    public static String getObjectWithBody(String node, String json){
+        String output = null;
+        try {
+
+            conn = (HttpURLConnection) new URL(rootUrl + node).openConnection();
+            conn.setDoOutput(true);
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+
+            System.out.println(json);
+            OutputStream os = conn.getOutputStream();
+            os.write(json.getBytes());
+            os.flush();
+
+            if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                throw new RuntimeException("Failed : HTTP error code : " + conn.getResponseCode());
+            }
+
+            BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+
+
+            System.out.println("Output from Server .... \n");
+            /*
+            while ((output = br.readLine()) != null) {
+                System.out.println(output);
+            }
+
+             */
+
+            output = br.readLine();
+
+
+            conn.disconnect();
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return output;
+    }
+
 
     public static String postObject(String node, String json){
         String output = null;

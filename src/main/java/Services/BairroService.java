@@ -14,7 +14,7 @@ public class BairroService {
     public static Bairro getById(Long id){
         Bairro bairro = new Bairro();
         try {
-            String json = DefaultRequests.getObject(id, "/clientes");
+            String json = DefaultRequests.getObject(id.toString(), "/clientes");
 
             Gson gson = new Gson();
             bairro = gson.fromJson(new String(json.getBytes()), Bairro.class);

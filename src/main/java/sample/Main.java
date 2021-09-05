@@ -12,7 +12,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        DefaultRequests.setConnect("http://192.168.1.9:8081");
+        DefaultRequests.setConnect("http://192.168.1.11:8081");
         Parent root = FXMLLoader.load(getClass().getResource("/LoginLogoutScreen.fxml"));
         primaryStage.setTitle("LOGIN - GRAMARI");
         primaryStage.initStyle(StageStyle.UNDECORATED);

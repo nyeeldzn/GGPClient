@@ -15,7 +15,7 @@ public class PedidoService {
         public static OrdemPedido getById(Long id){
             OrdemPedido ped = new OrdemPedido();
             try {
-                String json = DefaultRequests.getObject(id, "/clientes");
+                String json = DefaultRequests.getObject(id.toString(), "/clientes");
 
                 Gson gson = new Gson();
                 ped = gson.fromJson(new String(json.getBytes()), OrdemPedido.class);
@@ -52,13 +52,15 @@ public class PedidoService {
             return pedidosDTO;
         }
 
-        public static String insert(OrdemPedido pedido){
+        public static OrdemPedido insert(OrdemPedido pedido){
             Gson gson = new Gson();
             String input = gson.toJson(pedido);
             System.out.println("Entrada do POST" + input);
             String output = DefaultRequests.postObject("/pedidos", input);
             System.out.println("Saida do POST" + output);
-            return output;
+            Gson pedJson = new Gson();
+            OrdemPedido ped = pedJson.fromJson(new String(output.getBytes()), OrdemPedido.class);
+            return ped;
         }
 
         public static int update(OrdemPedido newObj){

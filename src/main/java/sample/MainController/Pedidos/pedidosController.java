@@ -1,4 +1,4 @@
-package sample;
+package sample.MainController.Pedidos;
 
 import com.jfoenix.controls.*;
 import helpers.DefaultComponents;
@@ -29,6 +29,7 @@ import jxl.format.Colour;
 import jxl.write.Label;
 import jxl.write.*;
 import models.OrdemPedido;
+import sample.MainController.MainController;
 
 import java.io.File;
 import java.io.IOException;

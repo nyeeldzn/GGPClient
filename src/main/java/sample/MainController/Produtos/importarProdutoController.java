@@ -1,4 +1,4 @@
-package sample;
+package sample.MainController.Produtos;
 
 import com.jfoenix.controls.JFXButton;
 import helpers.DefaultComponents;

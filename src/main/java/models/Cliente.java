@@ -80,4 +80,9 @@ public class Cliente {
     public void setPedidos(List<OrdemPedido> pedidos) {
         this.pedidos = pedidos;
     }
+
+    @Override
+    public String toString() {
+        return nome.toUpperCase();
+    }
 }

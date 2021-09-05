@@ -1,4 +1,4 @@
-package sample;
+package sample.MainController;
 
 import Services.PedidoService;
 import com.jfoenix.controls.JFXButton;
@@ -6,6 +6,7 @@ import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDialog;
 import com.jfoenix.controls.JFXHamburger;
 import helpers.*;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -94,7 +95,7 @@ public class MainController implements Initializable {
     private TableView<OrdemPedido> tablePedido;
 
     @FXML
-    private TableColumn<OrdemPedido, Integer> idCol;
+    private TableColumn<OrdemPedido, Long> idCol;
 
     @FXML
     private TableColumn<OrdemPedido, String> nomeCol;
@@ -187,10 +188,11 @@ public class MainController implements Initializable {
     private void recuperarPedidos() {
         //receber conexao
 
+
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
         // idCol.setSortType(TableColumn.SortType.DESCENDING);
-        nomeCol.setCellValueFactory(new PropertyValueFactory<>("cliente_nome"));
-        telCol.setCellValueFactory(new PropertyValueFactory<>("num_cliente"));
+        nomeCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getCliente().getNome()));
+        telCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getCliente().getTelefone()));
         statusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
 
         idColTriagem.setCellValueFactory(new PropertyValueFactory<>("id"));

@@ -14,7 +14,7 @@ public class ProdutoService {
         public static Produto getById(Long id){
             Produto cli = new Produto();
             try {
-                String json = DefaultRequests.getObject(id, "/clientes");
+                String json = DefaultRequests.getObject(id.toString(), "/clientes");
 
                 Gson gson = new Gson();
                 cli = gson.fromJson(new String(json.getBytes()), Produto.class);

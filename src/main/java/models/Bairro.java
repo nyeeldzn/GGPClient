@@ -1,5 +1,6 @@
 package models;
 
+import java.util.Collection;
 import java.util.List;
 
 
@@ -42,5 +43,14 @@ public class Bairro {
 
     public void setClientes(List<Cliente> clientes) {
         this.clientes = clientes;
+    }
+
+    @Override
+    public String toString() {
+        return nome;
+    }
+
+    public static Bairro findByNome(Collection<Bairro> listBairro, String nome) {
+        return listBairro.stream().filter(carnet -> nome.equals(carnet.getNome())).findFirst().orElse(null);
     }
 }
