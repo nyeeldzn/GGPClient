@@ -15,7 +15,7 @@ public class PedidoService {
         public static OrdemPedido getById(Long id){
             OrdemPedido ped = new OrdemPedido();
             try {
-                String json = DefaultRequests.getObject(id.toString(), "/clientes");
+                String json = DefaultRequests.getObject(id.toString(), "/pedidos");
 
                 Gson gson = new Gson();
                 ped = gson.fromJson(new String(json.getBytes()), OrdemPedido.class);

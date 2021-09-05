@@ -134,7 +134,7 @@ public class OrdemPedido implements Serializable {
 
     public Date getEntradaDate() {
         Date strr = null;
-        SimpleDateFormat format = new SimpleDateFormat("yyyy:MM:dd");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         try {
             strr = format.parse(entradaDate);
         }catch (ParseException e){
@@ -144,7 +144,7 @@ public class OrdemPedido implements Serializable {
     }
 
     public void setEntradaDate(Date entradaDate) {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy:MM:dd");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         this.entradaDate = format.format(entradaDate);
     }
 

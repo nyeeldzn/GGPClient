@@ -1,5 +1,7 @@
 package sample.MainController.Pedidos;
 
+import Services.PedidoService;
+import Services.ProdutoService;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Paragraph;
@@ -36,9 +38,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -105,11 +104,11 @@ public class  detalhesPedidoController implements Initializable {
     @FXML
     private StackPane stackPane;
 
-    String pedido_id;
+    Long pedido_id;
     int table_index;
     String prod_id, prod_nome;
     Produto produto;
-    OrdemPedido pedido;
+    OrdemPedido pedido = null;
     int selectedProduto;
     boolean isSelected = false;
     String horario_atual;
@@ -119,15 +118,7 @@ public class  detalhesPedidoController implements Initializable {
     ArrayList<Produto> produtos = new ArrayList();
     ObservableList<ProdutoPedido> produtosPedido = FXCollections.observableArrayList();
 
-    String query = null;
-    String pedido_Produto_query = null;
-    Connection connection = null;
-    PreparedStatement preparedStatementProduto = null;
-    PreparedStatement preparedStatementOrdem = null;
 
-    PreparedStatement preparedStatementPedidoProduto = null;
-
-    ResultSet resultSet = null;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -353,15 +344,16 @@ public class  detalhesPedidoController implements Initializable {
         intentData intent = intentData.getINSTANCE();
         id = intent.getDadosteste();
         table = intent.getTableIndex();
-        pedido_id = id;
+        pedido_id = Long.valueOf(id);
         table_index = table;
         System.out.println("Dado recebido: " + pedido_id);
 
-        recuperarProdutos();
         recuperarDadosPedido();
+        recuperarProdutos();
     }
-    private void recuperarProdutos() throws SQLException {
+    private void recuperarProdutos(){
         produtos.clear();
+        produtos = ProdutoService.findAll();
         //recuperar todos os pedidos
     }
     private void recuperarProdutosPedido() throws SQLException {
@@ -375,9 +367,24 @@ public class  detalhesPedidoController implements Initializable {
         //recuperar pedido criado por nome
         addproduto_pedido(Math.toIntExact(produto.getId()), produto.getNome());
     }
-    private void recuperarDadosPedido() throws SQLException {
+    private void recuperarDadosPedido(){
         //recuperar dados do pedido
-        setarDados();
+        pedido = PedidoService.getById(pedido_id);
+        if(pedido != null){
+            setData(pedido);
+        }else{
+            JFXDialog dialog = AlertDialogModel.alertDialogErro("Houve um problema ao carregar o pedido, tente novamente mais tarde",stackPane);
+            dialog.show();
+        }
+    }
+
+    private void setData(OrdemPedido pedido) {
+        textNome.setText(pedido.getCliente().getNome());
+        SimpleDateFormat fDate = new SimpleDateFormat("yyyy:MM:dd");
+        textData_Entrada.setText(fDate.format(pedido.getEntradaDate()));
+        textEndereco.setText(pedido.getCliente().getEndereco() + ", " + pedido.getCliente().getBairro().getNome());
+        textTelefone.setText(pedido.getCliente().getTelefone());
+        textPagamento.setText(pedido.getForma_pagamento());
     }
     //Metodos Iniciais
 
@@ -499,9 +506,7 @@ public class  detalhesPedidoController implements Initializable {
         recuperarProdutos();
         recuperarProdutosPedido();
     }
-    private void setarDados() {
-        //setar dados nos textfields
-    }
+
     private void fecharJanela(){
         Stage stage = (Stage) stackPane.getScene().getWindow();
         stage.getOnCloseRequest().handle(new WindowEvent(stage, WindowEvent.WINDOW_CLOSE_REQUEST));

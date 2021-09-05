@@ -450,7 +450,6 @@ public class novoPedidoController implements Initializable {
         });
     }
     private void salvarPedido(){
-        SimpleDateFormat format = new SimpleDateFormat("dd-MM-YYYY");
         Date date = new Date();
         Date horario = new Date(System.currentTimeMillis());
 
