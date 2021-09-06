@@ -1,12 +1,12 @@
 package models;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
 import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class OrdemPedido implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -118,6 +118,14 @@ public class OrdemPedido implements Serializable {
 
     public List<Produto> getProdutos() {
         return produtos;
+    }
+
+    public ObservableList<Produto> getObservableProdutos(){
+        ObservableList<Produto> obsProd = FXCollections.observableArrayList();
+        for(int i = 0; i< produtos.size(); i++){
+            obsProd.add(produtos.get(i));
+        }
+        return obsProd;
     }
 
     public void setProdutos(List<Produto> produtos) {

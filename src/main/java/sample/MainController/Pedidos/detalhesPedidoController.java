@@ -11,6 +11,7 @@ import helpers.AlertDialogModel;
 import helpers.DefaultComponents;
 import helpers.UserPrivilegiesVerify;
 import helpers.intentData;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -18,7 +19,6 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
@@ -31,7 +31,6 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import models.OrdemPedido;
 import models.Produto;
-import models.ProdutoPedido;
 import models.Usuario;
 
 import java.io.File;
@@ -60,13 +59,13 @@ public class  detalhesPedidoController implements Initializable {
     private JFXButton btnAtualizarLista;
 
     @FXML
-    private TableView<ProdutoPedido> tableProdutos;
+    private TableView<Produto> tableProdutos;
 
     @FXML
-    private TableColumn<ProdutoPedido, String> nomeCol;
+    private TableColumn<Produto, String> nomeCol;
 
     @FXML
-    private TableColumn<ProdutoPedido, Integer> qtdCol;
+    private TableColumn<Produto, Integer> qtdCol;
 
     @FXML
     private TextField edtNomeProduto;
@@ -109,14 +108,14 @@ public class  detalhesPedidoController implements Initializable {
     String prod_id, prod_nome;
     Produto produto;
     OrdemPedido pedido = null;
-    int selectedProduto;
+    Long selectedProduto;
     boolean isSelected = false;
     String horario_atual;
     double bHeight;
     Usuario user;
 
     ArrayList<Produto> produtos = new ArrayList();
-    ObservableList<ProdutoPedido> produtosPedido = FXCollections.observableArrayList();
+    ObservableList<Produto> produtosPedido = FXCollections.observableArrayList();
 
 
 
@@ -260,13 +259,13 @@ public class  detalhesPedidoController implements Initializable {
                 dialog.show();
             }
         });
-        tableProdutos.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<ProdutoPedido>() {
+        tableProdutos.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Produto>() {
             @Override
-            public void changed(ObservableValue<? extends ProdutoPedido> observable, ProdutoPedido oldValue, ProdutoPedido newValue) {
+            public void changed(ObservableValue<? extends Produto> observable, Produto oldValue, Produto newValue) {
                 if(tableProdutos.getSelectionModel().getSelectedItem() != null){
                     TableView.TableViewSelectionModel selectionModel = tableProdutos.getSelectionModel();
-                    ProdutoPedido produto = tableProdutos.getSelectionModel().getSelectedItem();
-                    selectedProduto = produto.getIndex();
+                    Produto produto = tableProdutos.getSelectionModel().getSelectedItem();
+                    selectedProduto = produto.getId();
                     isSelected = true;
                 }
             }
@@ -324,7 +323,7 @@ public class  detalhesPedidoController implements Initializable {
             document.add(new Paragraph("  Qtd.                   Item no.   "));
             document.add(new Paragraph("=============================="));
             for(int i = 0; i < size; i++){
-            document.add(new Paragraph(" " + produtosPedido.get(i).getQtd() +" || " + produtosPedido.get(i).getNome()));
+           // document.add(new Paragraph(" " + produtosPedido.get(i).getQtd() +" || " + produtosPedido.get(i).getNome()));
             }
             document.add(new Paragraph("=============================="));
             document.add(new Paragraph("-Operador: " + pedido.getOperador().getUsername()));
@@ -358,9 +357,10 @@ public class  detalhesPedidoController implements Initializable {
     }
     private void recuperarProdutosPedido() throws SQLException {
         produtosPedido.clear();
-        nomeCol.setCellValueFactory(new PropertyValueFactory<>("nome"));
-        qtdCol.setCellValueFactory(new PropertyValueFactory<>("qtd"));
+        nomeCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getNome()) );
+        //qtdCol.setCellValueFactory(c -> new SimpleStringProperty());
         //recuperar produtos do pedido
+        produtosPedido = pedido.getObservableProdutos();
         tableProdutos.setItems(produtosPedido);
     }
     private void recuperarProdutoCriado(String nome) throws SQLException {
