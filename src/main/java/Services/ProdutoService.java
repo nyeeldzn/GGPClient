@@ -24,7 +24,31 @@ public class ProdutoService {
             return cli;
         }
 
-        public static ArrayList<Produto> findAll(){
+    public static ArrayList<Produto> getByNome(String nome){
+        ArrayList<Produto> produtos = new ArrayList<>();
+
+        Produto produto = new Produto();
+        produto.setId(null);
+        produto.setNome(nome);
+        Gson gson = new Gson();
+        String input = gson.toJson(produto);
+
+        String json = DefaultRequests.getObjectWithBody("/produtos/buscaPorNome", input);
+
+        Gson returnJson = new Gson();
+
+        Type userListType = new TypeToken<ArrayList<Produto>>(){}.getType();
+
+        produtos = returnJson.fromJson(json, userListType);
+
+        for(int i = 0; i<produtos.size(); i++){
+            System.out.println(produtos.get(i).getNome());
+        }
+        return produtos;
+    }
+
+
+    public static ArrayList<Produto> findAll(){
             ArrayList<Produto> produtos = new ArrayList<>();
             String json = DefaultRequests.getAll("/produtos");
 

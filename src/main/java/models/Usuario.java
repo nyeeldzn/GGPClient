@@ -1,7 +1,5 @@
 package models;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class Usuario {
@@ -10,7 +8,6 @@ public class Usuario {
     private String username;
     private int priv;
 
-    private List<OrdemPedido> pedidos = new ArrayList<>();
 
     public Usuario () {}
 

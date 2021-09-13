@@ -1,8 +1,5 @@
 package models;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Cliente {
 
     private Long id;
@@ -11,8 +8,6 @@ public class Cliente {
     private Bairro bairro;
     private String telefone;
     String data_cadastro;
-
-    private List<OrdemPedido> pedidos = new ArrayList<>();
 
     public Cliente(Long id, String nome, String endereco, Bairro bairro, String telefone, String data_cadastro) {
         this.id = id;
@@ -73,13 +68,7 @@ public class Cliente {
         this.data_cadastro = data_cadastro;
     }
 
-    public List<OrdemPedido> getPedidos() {
-        return pedidos;
-    }
 
-    public void setPedidos(List<OrdemPedido> pedidos) {
-        this.pedidos = pedidos;
-    }
 
     @Override
     public String toString() {

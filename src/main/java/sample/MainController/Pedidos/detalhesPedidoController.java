@@ -11,6 +11,7 @@ import helpers.AlertDialogModel;
 import helpers.DefaultComponents;
 import helpers.UserPrivilegiesVerify;
 import helpers.intentData;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -30,6 +31,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import models.OrdemPedido;
+import models.OrderProduct;
 import models.Produto;
 import models.Usuario;
 
@@ -42,12 +44,16 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class  detalhesPedidoController implements Initializable {
 
     @FXML
     private JFXButton btnSair;
+
+    @FXML
+    private JFXButton btnSalvar;
 
     @FXML
     private JFXButton btnImprimir;
@@ -59,13 +65,13 @@ public class  detalhesPedidoController implements Initializable {
     private JFXButton btnAtualizarLista;
 
     @FXML
-    private TableView<Produto> tableProdutos;
+    private TableView<OrderProduct> tableProdutos;
 
     @FXML
-    private TableColumn<Produto, String> nomeCol;
+    private TableColumn<OrderProduct, String> nomeCol;
 
     @FXML
-    private TableColumn<Produto, Integer> qtdCol;
+    private TableColumn<OrderProduct, Integer> qtdCol;
 
     @FXML
     private TextField edtNomeProduto;
@@ -113,9 +119,10 @@ public class  detalhesPedidoController implements Initializable {
     String horario_atual;
     double bHeight;
     Usuario user;
+    Produto produtoAtual = null;
 
     ArrayList<Produto> produtos = new ArrayList();
-    ObservableList<Produto> produtosPedido = FXCollections.observableArrayList();
+    ObservableList<OrderProduct> produtosPedido = FXCollections.observableArrayList();
 
 
 
@@ -128,11 +135,9 @@ public class  detalhesPedidoController implements Initializable {
             exception.printStackTrace();
         }
 
-        try {
-            recuperarProdutosPedido();
-        } catch (SQLException exception) {
-            exception.printStackTrace();
-        }
+
+        recuperarProdutosPedido();
+
 
         setupComponentes();
 
@@ -154,6 +159,9 @@ public class  detalhesPedidoController implements Initializable {
 
         autoCompletePopup.setSelectionHandler(event -> {
             edtNomeProduto.setText(event.getObject());
+            System.out.println("Buscando Produto selecionado: " + event.getObject().toUpperCase());
+            produtoAtual = ProdutoService.getByNome(event.getObject().toUpperCase()).get(0);
+            System.out.println("Produto selecionado[recuperado]: " + produtoAtual.getNome());
             edtQTD.requestFocus();
             // you can do other actions here when text completed
         });
@@ -191,7 +199,7 @@ public class  detalhesPedidoController implements Initializable {
             if(UserPrivilegiesVerify.permissaoVerBotao(user, 2) == true){
                 switch (e.getCode()){
                     case ENTER:
-                        salvarProduto();
+                        adicionarProdutoLista();
                         break;
                 }
             }else{
@@ -228,7 +236,7 @@ public class  detalhesPedidoController implements Initializable {
         btnADD.setOnAction((e) -> {
             if(UserPrivilegiesVerify.permissaoVerBotao(user, 2) == true){
                 if(table_index != 3){
-                    salvarProduto();
+                    adicionarProdutoLista();
                 }else{
                     JFXDialog dialog = AlertDialogModel.alertDialogErro("Não é permitidas alterações, no pedido finalizado", stackPane);
                     dialog.show();
@@ -238,16 +246,12 @@ public class  detalhesPedidoController implements Initializable {
                 dialog.show();
             }
         });
+        btnSalvar.setOnAction((e) -> salvarPedido());
+
         btnSair.setOnAction((e) -> {
             fecharJanela();
         });
-        btnAtualizarLista.setOnAction((e) -> {
-            try {
-                recuperarProdutosPedido();
-            } catch (SQLException exception) {
-                exception.printStackTrace();
-            }
-        });
+        btnAtualizarLista.setOnAction((e) -> recuperarProdutosPedido());
         btnImprimir.setOnAction((e) -> {
             if(UserPrivilegiesVerify.permissaoVerBotao(user, 1) == true){
                 File file = DefaultComponents.fileChooserSave(stackPane, "PDF files (*.pdf)", "*.pdf");
@@ -259,12 +263,12 @@ public class  detalhesPedidoController implements Initializable {
                 dialog.show();
             }
         });
-        tableProdutos.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Produto>() {
+        tableProdutos.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<OrderProduct>() {
             @Override
-            public void changed(ObservableValue<? extends Produto> observable, Produto oldValue, Produto newValue) {
+            public void changed(ObservableValue<? extends OrderProduct> observable, OrderProduct oldValue, OrderProduct newValue) {
                 if(tableProdutos.getSelectionModel().getSelectedItem() != null){
                     TableView.TableViewSelectionModel selectionModel = tableProdutos.getSelectionModel();
-                    Produto produto = tableProdutos.getSelectionModel().getSelectedItem();
+                    OrderProduct produto = tableProdutos.getSelectionModel().getSelectedItem();
                     selectedProduto = produto.getId();
                     isSelected = true;
                 }
@@ -292,6 +296,27 @@ public class  detalhesPedidoController implements Initializable {
             }
         });
 
+    }
+
+    private void salvarPedido() {
+        /*
+        for(int i = 0; i<produtosPedido.size(); i++){
+            produtosPedido.get(i).setPedido(pedido);
+        }
+
+         */
+        List<OrderProduct> newProdutosList = new ArrayList<>();
+        for(int i = 0; i<produtosPedido.size(); i++){
+            System.out.println("Adicionando produto: do pedido: " +
+                    // produtosPedido.get(i).getPedido().getId() +
+                    " com id: " + produtosPedido.get(i).getId() +
+                    " Produto de id: " + produtosPedido.get(i).getProduto().getId() +
+                    " Produto de nome: " + produtosPedido.get(i).getProduto().getNome());
+            newProdutosList.add(produtosPedido.get(i));
+        }
+        pedido.setProdutos(newProdutosList);
+        System.out.println(pedido);
+        PedidoService.update(pedido);
     }
 
     private void removerProduto() {
@@ -355,12 +380,13 @@ public class  detalhesPedidoController implements Initializable {
         produtos = ProdutoService.findAll();
         //recuperar todos os pedidos
     }
-    private void recuperarProdutosPedido() throws SQLException {
+    private void recuperarProdutosPedido(){
         produtosPedido.clear();
-        nomeCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getNome()) );
-        //qtdCol.setCellValueFactory(c -> new SimpleStringProperty());
+        nomeCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getProduto().getNome()) );
+        qtdCol.setCellValueFactory(c -> new SimpleIntegerProperty(c.getValue().getQuantity()).asObject());
         //recuperar produtos do pedido
-        produtosPedido = pedido.getObservableProdutos();
+
+        produtosPedido = pedido.getProdutos();
         tableProdutos.setItems(produtosPedido);
     }
     private void recuperarProdutoCriado(String nome) throws SQLException {
@@ -393,7 +419,7 @@ public class  detalhesPedidoController implements Initializable {
         int quantidade = Integer.parseInt(edtQTD.getText());
         //adicionar produto
     }
-    private void salvarProduto(){
+    private void adicionarProdutoLista(){
         prod_nome = edtNomeProduto.getText().toUpperCase().trim();
 
         if(prod_nome.isEmpty()){
@@ -402,32 +428,12 @@ public class  detalhesPedidoController implements Initializable {
             alert.setContentText("Preencha todos os Dados!");
             alert.showAndWait();
         }else{
-            for(int i = 1; i<produtos.size(); i++){
-                int id = Math.toIntExact(produtos.get(i).getId());
-                String nomerecup = produtos.get(i).getNome().toUpperCase().trim();
-
-                System.out.println(nomerecup);
-                System.out.println(prod_nome);
-                System.out.println(i);
-
-                System.out.println(produtos.size());
-
-                if(nomerecup.equals(prod_nome)){
-                    System.out.println("Finalizando for, adcionando produto.");
-                    i = produtos.size();
-                    System.out.println("ArraySize " + produtos.size() + "For size " + i);
-                    addproduto_pedido(id, nomerecup.toUpperCase().trim());
-                }else if(!(nomerecup.equals(prod_nome))){
-                    if(i == produtos.size() - 1 && !(prod_nome.equals(nomerecup))){
-                        System.out.println("Criando novo produto, finalizando for");
-                        i = i + 1;
-                        insertProduto();
-                    }
-                }
-            }
-
+            System.out.println("Adicionando produto a lista atual");
+            produtosPedido.add(produtoAtual.toOrderProduct(pedido, Integer.parseInt(edtQTD.getText().trim())));
+            restartAdd();
         }
     }
+
     private void insertProduto() {
         //inserir produto
         if(true){
@@ -497,14 +503,12 @@ public class  detalhesPedidoController implements Initializable {
     //Metodos de Negocios
 
     //Metodos de Controle
-    private void restartAdd() throws SQLException {
+    private void restartAdd() {
         System.out.println("Reiniciando Componentes");
         edtNomeProduto.clear();
         edtQTD.clear();
         edtQTD.setText("1");
         edtNomeProduto.requestFocus();
-        recuperarProdutos();
-        recuperarProdutosPedido();
     }
 
     private void fecharJanela(){

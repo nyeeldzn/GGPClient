@@ -3,13 +3,13 @@ package models;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
-public class OrdemPedido implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class OrdemPedido {
 
     private Long id;
 
@@ -41,7 +41,7 @@ public class OrdemPedido implements Serializable {
     //4 -- enviado
     //5 -- finalizado
 
-    private List<Produto> produtos = new ArrayList<>();
+    private List<OrderProduct> orderProducts = new ArrayList<>();
 
     public OrdemPedido() {
     }
@@ -116,20 +116,18 @@ public class OrdemPedido implements Serializable {
         this.status = status;
     }
 
-    public List<Produto> getProdutos() {
-        return produtos;
-    }
 
-    public ObservableList<Produto> getObservableProdutos(){
-        ObservableList<Produto> obsProd = FXCollections.observableArrayList();
-        for(int i = 0; i< produtos.size(); i++){
-            obsProd.add(produtos.get(i));
+    public ObservableList<OrderProduct> getProdutos() {
+        ObservableList<OrderProduct> prods = FXCollections.observableArrayList();
+        for(int i = 0; i<orderProducts.size(); i++){
+            prods.add(orderProducts.get(i));
         }
-        return obsProd;
+        return prods;
     }
 
-    public void setProdutos(List<Produto> produtos) {
-        this.produtos = produtos;
+    public void setProdutos(List<OrderProduct> produtos) {
+        orderProducts.clear();
+        this.orderProducts = produtos;
     }
 
     public String getCaixa_responsavel() {
@@ -152,13 +150,13 @@ public class OrdemPedido implements Serializable {
     }
 
     public void setEntradaDate(Date entradaDate) {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         this.entradaDate = format.format(entradaDate);
     }
 
     public Date getEntradaHora() {
         Date strr = null;
-        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         try {
             strr = format.parse(entradaHora);
         }catch (ParseException e){
@@ -168,13 +166,13 @@ public class OrdemPedido implements Serializable {
     }
 
     public void setEntradaHora(Date entradaHora) {
-        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         this.entradaHora = format.format(entradaHora);
     }
 
     public Date getTriagemHora() {
         Date strr = null;
-        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         try {
             strr = format.parse(triagemHora);
         }catch (ParseException e){
@@ -184,13 +182,13 @@ public class OrdemPedido implements Serializable {
     }
 
     public void setTriagemHora(Date triagemHora) {
-        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         this.triagemHora = format.format(triagemHora);
     }
 
     public Date getCheckoutHora() {
         Date strr = null;
-        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         try {
             strr = format.parse(checkoutHora);
         }catch (ParseException e){
@@ -200,13 +198,13 @@ public class OrdemPedido implements Serializable {
     }
 
     public void setCheckoutHora(Date checkoutHora) {
-        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         this.checkoutHora = format.format(checkoutHora);
     }
 
     public Date getFinalizadoHora() {
         Date strr = null;
-        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         try {
             strr = format.parse(finalizadoHora);
         }catch (ParseException e){
@@ -216,20 +214,7 @@ public class OrdemPedido implements Serializable {
     }
 
     public void setFinalizadoHora(Date finalizadoHora) {
-        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         this.finalizadoHora = format.format(finalizadoHora);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        OrdemPedido that = (OrdemPedido) o;
-        return status == that.status && Objects.equals(id, that.id) && Objects.equals(cliente, that.cliente) && Objects.equals(operador, that.operador) && Objects.equals(entregador, that.entregador) && Objects.equals(forma_pagamento, that.forma_pagamento) && Objects.equals(entradaDate, that.entradaDate) && Objects.equals(entradaHora, that.entradaHora) && Objects.equals(triagemHora, that.triagemHora) && Objects.equals(checkoutHora, that.checkoutHora) && Objects.equals(finalizadoHora, that.finalizadoHora) && Objects.equals(fonte_pedido, that.fonte_pedido) && Objects.equals(caixa_responsavel, that.caixa_responsavel);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, cliente, operador, entregador, forma_pagamento, entradaDate, entradaHora, triagemHora, checkoutHora, finalizadoHora, fonte_pedido, caixa_responsavel, status);
     }
 }

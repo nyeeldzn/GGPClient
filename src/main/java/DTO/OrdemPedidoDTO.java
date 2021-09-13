@@ -88,7 +88,7 @@ public class OrdemPedidoDTO implements Serializable {
     public static Date toDate(String sDate){
         Date date = null;
         try {
-            SimpleDateFormat fDate = new SimpleDateFormat("yyyy-MM-dd");
+            SimpleDateFormat fDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
             date = fDate.parse(sDate);
         }catch (ParseException pe){
             pe.printStackTrace();
@@ -99,7 +99,7 @@ public class OrdemPedidoDTO implements Serializable {
     public static Date toTime(String sTime){
         Date time = null;
         try {
-            SimpleDateFormat fTime = new SimpleDateFormat("HH:mm:ss");
+            SimpleDateFormat fTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
             time = fTime.parse(sTime);
         }catch (ParseException pe){
             pe.printStackTrace();
