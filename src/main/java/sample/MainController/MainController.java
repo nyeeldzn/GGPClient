@@ -46,6 +46,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -766,7 +767,9 @@ public class MainController implements Initializable {
         listaPedidosTriagem.clear();
         listaPedidosFinalizado.clear();
 
-        listaPedidos = FXCollections.observableArrayList(PedidoService.findAll());
+        listaPedidos = FXCollections.observableArrayList(PedidoService.findAllByStatus(1));
+        listaPedidosTriagem = FXCollections.observableArrayList(PedidoService.findAllByMoreStatus(Arrays.asList(2,3,4)));
+        listaPedidosFinalizado = FXCollections.observableArrayList(PedidoService.findAllByStatus(5));
 
         tablePedido.setItems(listaPedidos);
         tablePedido.getSortOrder().add(idCol);

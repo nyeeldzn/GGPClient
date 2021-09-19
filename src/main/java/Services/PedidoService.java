@@ -9,6 +9,7 @@ import models.OrdemPedido;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.List;
 
 public class PedidoService {
 
@@ -35,6 +36,19 @@ public class PedidoService {
 
             return pedidos;
         }
+
+    public static ArrayList<OrdemPedido> findAllByStatus(Integer status){
+        ArrayList<OrdemPedidoDTO> pedidosDTO = findAllDTOByStatus(status);
+        ArrayList<OrdemPedido> pedidos = new ArrayList<>();
+        for(int i = 0; i<pedidosDTO.size(); i++){
+            pedidos.add(OrdemPedidoDTO.toOrdemPedido(pedidosDTO.get(i)));
+        }
+
+        return pedidos;
+    }
+
+
+
         public static ArrayList<OrdemPedidoDTO> findAllDTO(){
             ArrayList<OrdemPedidoDTO> pedidosDTO = new ArrayList<>();
             String json = DefaultRequests.getAll("/pedidos");
@@ -52,7 +66,31 @@ public class PedidoService {
             return pedidosDTO;
         }
 
-        public static OrdemPedido insert(OrdemPedido pedido){
+    public static ArrayList<OrdemPedidoDTO> findAllDTOByStatus( Integer status ){
+        ArrayList<OrdemPedidoDTO> pedidosDTO = new ArrayList<>();
+
+        try {
+            String json = DefaultRequests.getObject(status.toString(), "/pedidos/buscaPorStatus");
+
+            Gson gson = new Gson();
+
+            Type userListType = new TypeToken<ArrayList<OrdemPedidoDTO>>() {
+            }.getType();
+
+            pedidosDTO = gson.fromJson(json, userListType);
+        }catch (IOException ioe){
+           ioe.printStackTrace();
+        }
+
+        for(int i = 0; i<pedidosDTO.size(); i++){
+            System.out.println("Pedido de id: " + pedidosDTO.get(i).getId() + " recuperado." );
+        }
+
+        return pedidosDTO;
+    }
+
+
+    public static OrdemPedido insert(OrdemPedido pedido){
             Gson gson = new Gson();
             String input = gson.toJson(pedido);
             System.out.println("Entrada do POST" + input);
@@ -74,5 +112,19 @@ public class PedidoService {
             int state;
                 state = DefaultRequests.deleteObjectById(id, "/pedidos");
             return state;
+        }
+
+
+
+        public static List<OrdemPedido> findAllByMoreStatus(List<Integer> status){
+            List<OrdemPedido> lista = new ArrayList<>();
+
+            for(int i = 0; i < status.size(); i++){
+                List<OrdemPedido> tempList;
+                tempList = findAllByStatus(status.get(i));
+                lista.addAll(tempList);
+            }
+
+            return lista;
         }
     }
