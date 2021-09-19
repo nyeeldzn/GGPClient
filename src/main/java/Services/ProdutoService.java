@@ -83,7 +83,7 @@ public class ProdutoService {
 
         public static int delete(Long id){
             int state;
-                state = DefaultRequests.deleteObject(id, "/produtos");
+                state = DefaultRequests.deleteObjectById(id, "/produtos");
             return state;
         }
     }

@@ -15,6 +15,14 @@ public class DefaultRequests {
         rootUrl = url;
     }
 
+    public static HttpURLConnection getConnection(){
+        return conn;
+    }
+
+    public static String getRootUrl(){
+        return rootUrl;
+    }
+
     public static String getObject(String variable, String node) throws IOException {
 
         conn = (HttpURLConnection) new URL(rootUrl + node + "/" + variable).openConnection();
@@ -103,12 +111,6 @@ public class DefaultRequests {
 
 
             System.out.println("Output from Server .... \n");
-            /*
-            while ((output = br.readLine()) != null) {
-                System.out.println(output);
-            }
-
-             */
 
             output = br.readLine();
 
@@ -164,7 +166,7 @@ public class DefaultRequests {
         return output;
     }
 
-    public static int deleteObject(Long id, String node) {
+    public static int deleteObjectById(Long id, String node) {
         int state = 0;
 
         try {
@@ -202,6 +204,7 @@ public class DefaultRequests {
 
         return state;
     }
+
 
     public static int putObject(String node, String json){
         int state = 0;

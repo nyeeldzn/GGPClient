@@ -1,5 +1,6 @@
 package sample.MainController.Pedidos;
 
+import Services.OrderProductService;
 import Services.PedidoService;
 import Services.ProdutoService;
 import com.itextpdf.text.Document;
@@ -17,9 +18,11 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
@@ -274,13 +277,33 @@ public class  detalhesPedidoController implements Initializable {
                 }
             }
         });
+
+        ContextMenu cm = new ContextMenu();
+        MenuItem mi1 = new MenuItem("REMOVER PRODUTO");
+        cm.getItems().add(mi1);
+        tableProdutos.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+
+            @Override
+            public void handle(MouseEvent t) {
+                if(t.getButton() == MouseButton.SECONDARY) {
+                    cm.show(tableProdutos, t.getScreenX(), t.getScreenY());
+                    mi1.setOnAction((e) -> {
+                        OrderProduct selProd = tableProdutos.getSelectionModel().getSelectedItem();
+                        removerProduto(selProd);
+                        //System.out.println("ID do pedido selecionado: " + tableProdutos.getSelectionModel().getSelectedItem().getId());
+                    });
+                }
+            }
+        });
+
         tableProdutos.setOnKeyPressed((e) -> {
             if(UserPrivilegiesVerify.permissaoVerBotao(user, 2) == true){
                 switch (e.getCode()) {
                     case DELETE:
                         if(isSelected == true){
                             if(table_index != 3){
-                                removerProduto();
+                                OrderProduct selProd = tableProdutos.getSelectionModel().getSelectedItem();
+                                removerProduto(selProd);
                             }else{
                                 JFXDialog dialog = AlertDialogModel.alertDialogErro("Não é permitida alterações no pedido finalizado", stackPane);
                                 dialog.show();
@@ -299,12 +322,6 @@ public class  detalhesPedidoController implements Initializable {
     }
 
     private void salvarPedido() {
-        /*
-        for(int i = 0; i<produtosPedido.size(); i++){
-            produtosPedido.get(i).setPedido(pedido);
-        }
-
-         */
         List<OrderProduct> newProdutosList = new ArrayList<>();
         for(int i = 0; i<produtosPedido.size(); i++){
             System.out.println("Adicionando produto: do pedido: " +
@@ -316,11 +333,38 @@ public class  detalhesPedidoController implements Initializable {
         }
         pedido.setProdutos(newProdutosList);
         System.out.println(pedido);
-        PedidoService.update(pedido);
+        switch(PedidoService.update(pedido)){
+            case 0:
+                JFXDialog d = AlertDialogModel.alertDialogErro("Houve um problema ao salvar o pedido", stackPane);
+                d.show();
+                break;
+            case 1:
+                JFXDialog a = AlertDialogModel.alertDialogErro("Houve um problema ao salvar o pedido", stackPane);
+                a.show();
+                break;
+            case 2:
+                fecharJanela();
+                break;
+        }
     }
 
-    private void removerProduto() {
+    private void removerProduto(OrderProduct selProd) {
         //excluir produto
+        System.out.println(produtosPedido);
+        produtosPedido.remove(selProd);
+        System.out.println(produtosPedido);
+
+        switch (OrderProductService.deleteObjectByObject(selProd)){
+            case 0:
+                AlertDialogModel.alertDialogErro("Houve um problema ao remover o item", stackPane);
+                break;
+            case 1:
+                AlertDialogModel.alertDialogErro("Houve um problema ao remover o item", stackPane);
+                break;
+            case 2:
+                restartAdd();
+                break;
+        }
     }
 
     private void criarPDF(File file) {
@@ -509,6 +553,7 @@ public class  detalhesPedidoController implements Initializable {
         edtQTD.clear();
         edtQTD.setText("1");
         edtNomeProduto.requestFocus();
+        tableProdutos.setItems(produtosPedido);
     }
 
     private void fecharJanela(){

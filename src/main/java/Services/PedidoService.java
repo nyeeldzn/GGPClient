@@ -72,7 +72,7 @@ public class PedidoService {
 
         public static int delete(Long id){
             int state;
-                state = DefaultRequests.deleteObject(id, "/pedidos");
+                state = DefaultRequests.deleteObjectById(id, "/pedidos");
             return state;
         }
     }

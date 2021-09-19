@@ -59,7 +59,7 @@ public class BairroService {
 
     public static int delete(Long id){
         int state;
-        state = DefaultRequests.deleteObject(id, "/bairros");
+        state = DefaultRequests.deleteObjectById(id, "/bairros");
         return state;
     }
 }

@@ -84,7 +84,7 @@ public class ClienteService {
 
     public static int delete(Long id){
         int state;
-        state = DefaultRequests.deleteObject(id, "/clientes");
+        state = DefaultRequests.deleteObjectById(id, "/clientes");
         return state;
     }
 }
