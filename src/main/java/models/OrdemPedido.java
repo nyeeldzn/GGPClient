@@ -29,6 +29,8 @@ public class OrdemPedido {
 
     private String checkoutHora;
 
+    private String enviadoHora;
+
     private String finalizadoHora;
 
     private String fonte_pedido;
@@ -200,6 +202,22 @@ public class OrdemPedido {
     public void setCheckoutHora(Date checkoutHora) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         this.checkoutHora = format.format(checkoutHora);
+    }
+
+    public Date getEnviadoHora() {
+        Date strr = null;
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        try {
+            strr = format.parse(enviadoHora);
+        }catch (ParseException e){
+            e.printStackTrace();
+        }
+        return strr;
+    }
+
+    public void setEnviadoHora(Date enviadoHora) {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        this.checkoutHora = format.format(enviadoHora);
     }
 
     public Date getFinalizadoHora() {

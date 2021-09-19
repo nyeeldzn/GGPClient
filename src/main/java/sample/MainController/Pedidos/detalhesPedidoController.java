@@ -321,7 +321,8 @@ public class  detalhesPedidoController implements Initializable {
 
     }
 
-    private void salvarPedido() {
+    private Boolean salvarPedido() {
+        boolean state = false;
         List<OrderProduct> newProdutosList = new ArrayList<>();
         for(int i = 0; i<produtosPedido.size(); i++){
             System.out.println("Adicionando produto: do pedido: " +
@@ -337,15 +338,19 @@ public class  detalhesPedidoController implements Initializable {
             case 0:
                 JFXDialog d = AlertDialogModel.alertDialogErro("Houve um problema ao salvar o pedido", stackPane);
                 d.show();
+                state = false;
                 break;
             case 1:
                 JFXDialog a = AlertDialogModel.alertDialogErro("Houve um problema ao salvar o pedido", stackPane);
                 a.show();
+                state = false;
                 break;
             case 2:
                 fecharJanela();
+                state = true;
                 break;
         }
+        return state;
     }
 
     private void removerProduto(OrderProduct selProd) {
@@ -543,7 +548,36 @@ public class  detalhesPedidoController implements Initializable {
         horario_atual = dateFormat.format(date);
 
         //alterar status do pedido
-            }
+
+        switch (pedido.getStatus()){
+            case 1 :
+                pedido.setStatus(2);
+                pedido.setTriagemHora(date);
+                break;
+            case 2 :
+                pedido.setStatus(3);
+                pedido.setCheckoutHora(date);
+                break;
+            case 3 :
+                pedido.setStatus(4);
+                pedido.setEnviadoHora(date);
+                break;
+            case 4 :
+                pedido.setStatus(5);
+                pedido.setFinalizadoHora(date);
+                break;
+        }
+        Boolean aBoolean = salvarPedido();
+        if (aBoolean == true) {
+            System.out.println("Pedido Atualizado com Sucesso!");
+        } else if (aBoolean == false) {
+            JFXDialog a = AlertDialogModel.alertDialogErro("Houve um problema ao atualizar o Status do Pedido", stackPane);
+            a.show();
+        } else if (aBoolean == false) {
+            JFXDialog b = AlertDialogModel.alertDialogErro("Houve um problema ao atualizar o Status do Pedido", stackPane);
+            b.show();
+        }
+    }
     //Metodos de Negocios
 
     //Metodos de Controle
