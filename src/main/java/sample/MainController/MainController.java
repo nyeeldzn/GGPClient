@@ -105,7 +105,7 @@ public class MainController implements Initializable {
     private TableColumn<OrdemPedido, String> telCol;
 
     @FXML
-    private TableColumn<OrdemPedido, Integer> statusCol;
+    private TableColumn<OrdemPedido, String> statusCol;
     //Table Entrada
 
     //Table Triagem
@@ -194,17 +194,19 @@ public class MainController implements Initializable {
         // idCol.setSortType(TableColumn.SortType.DESCENDING);
         nomeCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getCliente().getNome()));
         telCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getCliente().getTelefone()));
-        statusCol.setCellValueFactory(new PropertyValueFactory<>("status"));
+        statusCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().statusToString()));
 
         idColTriagem.setCellValueFactory(new PropertyValueFactory<>("id"));
-        nomeColTriagem.setCellValueFactory(new PropertyValueFactory<>("cliente_nome"));
-        dataColTriagem.setCellValueFactory(new PropertyValueFactory<>("horario_triagem"));
-        statusColTriagem.setCellValueFactory(new PropertyValueFactory<>("status"));
+        nomeColTriagem.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getCliente().getNome()));
+
+        dataColTriagem.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().dateToTimeString(c.getValue().getTriagemHora())));
+        statusColTriagem.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().statusToString()));
 
         idColFinalizado.setCellValueFactory(new PropertyValueFactory<>("id"));
-        nomeColFinalizado.setCellValueFactory(new PropertyValueFactory<>("cliente_nome"));
-        dataColFinalizado.setCellValueFactory(new PropertyValueFactory<>("horario_finalizado"));
-        statusColFinalizado.setCellValueFactory(new PropertyValueFactory<>("status"));
+        nomeColFinalizado.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getCliente().getNome()));
+
+        dataColFinalizado.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().dateToTimeString(c.getValue().getFinalizadoHora())));
+        statusColFinalizado.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().statusToString()));
 
         refreshTable();
     }

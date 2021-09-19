@@ -217,4 +217,37 @@ public class OrdemPedido {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         this.finalizadoHora = format.format(finalizadoHora);
     }
+
+    public String dateToTimeString(Date date){
+        String strr = "";
+        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        strr = format.format(date);
+        return strr;
+    }
+
+    public String statusToString(){
+        String status = "";
+        switch (this.status){
+            case 1:
+                status = "Pendente";
+            break;
+
+            case 2:
+                status = "Triagem";
+            break;
+
+            case 3:
+                status = "Checkout";
+            break;
+
+            case 4:
+                status = "Enviado";
+            break;
+
+            case 5:
+                status = "Finalizado";
+            break;
+        }
+        return status;
+    }
 }
