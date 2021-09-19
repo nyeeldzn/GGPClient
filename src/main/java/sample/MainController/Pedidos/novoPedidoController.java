@@ -348,8 +348,6 @@ public class novoPedidoController implements Initializable {
 
 
     }
-
-
     private void setupEdtFormaPag() {
         ArrayList<String> nomes = new ArrayList<>();
         nomes.add("DINHEIRO");
@@ -461,6 +459,7 @@ public class novoPedidoController implements Initializable {
         pedidoAtual.setCheckoutHora(horario);
         pedidoAtual.setFinalizadoHora(horario);
         pedidoAtual.setOperador(new Usuario(5L,"daniel",1));
+        pedidoAtual.setStatus(1);
 
         if (checkBoxManual.isSelected() == false) {
             if(pedidoAtual.getForma_pagamento().isEmpty() ||  pedidoAtual.getFonte_pedido().isEmpty()){
@@ -535,6 +534,7 @@ public class novoPedidoController implements Initializable {
         //inserir pedido
 
         OrdemPedido newPed = PedidoService.insert(pedidoAtual);
+        System.out.println(newPed);
         if(newPed != null){
             //Adicionar Contagem ao cliente
             //boolean state2 = db_crud.metodoClienteAddPedido(clienteAtual.getId(), clienteAtual.getQtdPedidos());
