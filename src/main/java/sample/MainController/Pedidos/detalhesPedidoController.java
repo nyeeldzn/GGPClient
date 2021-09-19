@@ -151,35 +151,53 @@ public class  detalhesPedidoController implements Initializable {
     }
 
     private void setupEdt() {
-        ArrayList<String> nomes = new ArrayList<>();
-        for(int i = 0; i<produtos.size(); i++){
-            nomes.add(produtos.get(i).getNome());
-        }
-
-        JFXAutoCompletePopup<String> autoCompletePopup = new JFXAutoCompletePopup<>();
-        autoCompletePopup.setPrefWidth(500);
-        autoCompletePopup.getSuggestions().addAll(nomes);
-
-        autoCompletePopup.setSelectionHandler(event -> {
-            edtNomeProduto.setText(event.getObject());
-            System.out.println("Buscando Produto selecionado: " + event.getObject().toUpperCase());
-            produtoAtual = ProdutoService.getByNome(event.getObject().toUpperCase()).get(0);
-            System.out.println("Produto selecionado[recuperado]: " + produtoAtual.getNome());
-            edtQTD.requestFocus();
-            // you can do other actions here when text completed
-        });
-
-        // filtering options
-        edtNomeProduto.textProperty().addListener(observable -> {
-            autoCompletePopup.filter(string -> string.toLowerCase().contains(edtNomeProduto.getText().toLowerCase()));
-            if (autoCompletePopup.getFilteredSuggestions().isEmpty() || edtNomeProduto.getText().isEmpty()) {
-                autoCompletePopup.hide();
-                // if you remove textField.getText.isEmpty() when text field is empty it suggests all options
-                // so you can choose
-            } else {
-                autoCompletePopup.show(edtNomeProduto);
+            ArrayList<String> nomes = new ArrayList<>();
+            for(int i = 0; i<produtos.size(); i++){
+                nomes.add(produtos.get(i).getNome());
             }
-        });
+
+            edtNomeProduto.setOnMouseClicked(e -> {
+                if(table_index == 3){
+                    JFXDialog dialog = AlertDialogModel.alertDialogErro("Nao e permitido alterar um pedido finalizado!", stackPane);
+                    dialog.show();
+                }
+            });
+            edtNomeProduto.setOnKeyPressed(e -> {
+                JFXDialog dialog = AlertDialogModel.alertDialogErro("Nao e permitido alterar um pedido finalizado!", stackPane);
+                if(table_index == 3){
+                    dialog.show();
+                }
+            });
+
+            JFXAutoCompletePopup<String> autoCompletePopup = new JFXAutoCompletePopup<>();
+            autoCompletePopup.setPrefWidth(500);
+            autoCompletePopup.getSuggestions().addAll(nomes);
+
+            autoCompletePopup.setSelectionHandler(event -> {
+                edtNomeProduto.setText(event.getObject());
+                System.out.println("Buscando Produto selecionado: " + event.getObject().toUpperCase());
+                produtoAtual = ProdutoService.getByNome(event.getObject().toUpperCase()).get(0);
+                System.out.println("Produto selecionado[recuperado]: " + produtoAtual.getNome());
+                if(table_index != 3){
+                    edtQTD.requestFocus();
+                }else{
+                    JFXDialog dialog = AlertDialogModel.alertDialogErro("Nao e permitido alterar um pedido finalizado!", stackPane);
+                    dialog.show();
+                }
+                // you can do other actions here when text completed
+            });
+
+            // filtering options
+            edtNomeProduto.textProperty().addListener(observable -> {
+                autoCompletePopup.filter(string -> string.toLowerCase().contains(edtNomeProduto.getText().toLowerCase()));
+                if (autoCompletePopup.getFilteredSuggestions().isEmpty() || edtNomeProduto.getText().isEmpty()) {
+                    autoCompletePopup.hide();
+                    // if you remove textField.getText.isEmpty() when text field is empty it suggests all options
+                    // so you can choose
+                } else {
+                    autoCompletePopup.show(edtNomeProduto);
+                }
+            });
     }
 
     //Metodos Iniciais
@@ -194,7 +212,9 @@ public class  detalhesPedidoController implements Initializable {
         edtQTD.setOnKeyPressed((e) ->{
             switch (e.getCode()){
                 case ENTER:
-                    btnADD.requestFocus();
+                    if(table_index != 3){
+                        btnADD.requestFocus();
+                    }
                     break;
             }
         });
@@ -214,12 +234,16 @@ public class  detalhesPedidoController implements Initializable {
         switch (table_index){
             case 1:
                 btnAlterarPolimorf.setVisible(true);
+                btnSalvar.setVisible(true);
+                btnADD.setVisible(true);
                 break;
             case 2:
                 btnAlterarPolimorf.setVisible(true);
+                btnSalvar.setVisible(true);
                 break;
             case 3:
                 btnAlterarPolimorf.setVisible(false);
+                btnSalvar.setVisible(false);
                 break;
 
         }
