@@ -1,5 +1,6 @@
 package sample.MainController.Pedidos;
 
+import Services.PedidoService;
 import com.jfoenix.controls.*;
 import helpers.DefaultComponents;
 import helpers.intentData;
@@ -28,6 +29,7 @@ import jxl.Workbook;
 import jxl.format.Colour;
 import jxl.write.Label;
 import jxl.write.*;
+import models.DateBetweenHelper;
 import models.OrdemPedido;
 import sample.MainController.MainController;
 
@@ -41,7 +43,9 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -300,13 +304,15 @@ public class pedidosController implements Initializable {
 
     //metodos de negocios
     private LocalDate nowOnDate(){
-        LocalDate localDate = LocalDate.now();
-        localDate.format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
-        dataFinal = formatData(localDate.toString());
-        dataInicial = formatData(localDate.toString());
+        //LocalDate localDate = LocalDate.now();
+        //localDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        Date date = new Date();
+        SimpleDateFormat fDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        dataInicial = fDate.format(date);
+        dataFinal = fDate.format(date);
         System.out.println("Data Atual: " + dataInicial);
         System.out.println("Data Atual: " + dataFinal);
-        return localDate;
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
     }
     private String onDate (JFXDatePicker picker){
@@ -320,7 +326,7 @@ public class pedidosController implements Initializable {
         SimpleDateFormat sdf = null;
         Date d = null;
         try{
-            sdf = new SimpleDateFormat("yy-MM-dd");
+            sdf = new SimpleDateFormat("yyyy-MM-dd");
             d = sdf.parse(data);
             sdf.applyPattern("yyyy-MM-dd");
         } catch (ParseException e) {
@@ -361,10 +367,12 @@ public class pedidosController implements Initializable {
                     break;
                 case 3:
                     listaPedidosTodos.clear();
-                    System.out.println("Buscando em todos os status");
+                    System.out.println("Buscando em todos os status com DATAS");
                     int size = listaComboBox.size();
-                    query = "SELECT * FROM `Pedidos` WHERE `data_entrada` >= ? AND `data_entrada` <= ?";
-                    listaPedidosTodos = recuperarPedidosPorData(query, "");
+                    DateBetweenHelper dBH = new DateBetweenHelper(dataInicial,dataFinal);
+                    System.out.println(dBH);
+                    System.out.println(dataInicial + "  " +  dataFinal);
+                    listaPedidosTodos = FXCollections.observableArrayList(PedidoService.findAllByDate(dBH));
                     tableView.setItems(listaPedidosTodos);
 
             }
@@ -372,30 +380,25 @@ public class pedidosController implements Initializable {
             switch (cb_selectedIndex) {
                 case 0:
                     System.out.println("Buscando nos Pedidos de Entrada");
-                    //query = "SELECT * FROM `Ordem_De_Pedido` WHERE `data_entrada` >= ? AND `data_entrada` <= ?";
-                    query = "SELECT * FROM `Pedidos` WHERE `status_id` =? ";
-                    listaPedidosEntrada = recuperarPedidosPorData(query, "1");
+                    listaPedidosEntrada = FXCollections.observableArrayList(PedidoService.findAllByStatus(1));
                     tableView.setItems(listaPedidosEntrada);
                     break;
                 case 1:
                     System.out.println("Buscando nos Pedidos em Triagem");
-                    query = "SELECT * FROM `Pedidos` WHERE `status_id` =?";
-                    listaPedidosTriagem = recuperarPedidosPorData(query, "2");
+                    listaPedidosTriagem = FXCollections.observableArrayList(PedidoService.findAllByMoreStatus(Arrays.asList(2,3,4)));
                     tableView.setItems(listaPedidosTriagem);
                     break;
                 case 2:
                     System.out.println("Buscando nos Pedidos Finalizados");
-                    query = "SELECT * FROM `Pedidos` WHERE `status_id` =?";
-                    listaPedidosFinalizado = recuperarPedidosPorData(query, "3");
+                    listaPedidosFinalizado = FXCollections.observableArrayList(PedidoService.findAllByStatus(5));
                     tableView.setItems(listaPedidosFinalizado);
                     break;
                 case 3:
                     listaPedidosTodos.clear();
                     System.out.println("Buscando em todos os status");
-                    query = "SELECT * FROM `Pedidos`";
-                    listaPedidosTodos = recuperarPedidosPorData(query, "");
-                                tableView.setItems(listaPedidosTodos);
-                                        break;
+                    listaPedidosTodos = FXCollections.observableArrayList(PedidoService.findAll());
+                    tableView.setItems(listaPedidosTodos);
+                    break;
                     }
             }
         }
@@ -528,7 +531,16 @@ public class pedidosController implements Initializable {
         });
     }
     //metodos de controle
-
+    public Date getEntradaDate(String dateStrr) {
+        Date strr = null;
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        try {
+            strr = format.parse(dateStrr);
+        }catch (ParseException e){
+            e.printStackTrace();
+        }
+        return strr;
+    }
     //metodos de controle
 
     //metodos de controle

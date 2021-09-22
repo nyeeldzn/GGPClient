@@ -88,7 +88,7 @@ public class OrdemPedidoDTO implements Serializable {
     public static Date toDate(String sDate){
         Date date = null;
         try {
-            SimpleDateFormat fDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+            SimpleDateFormat fDate = new SimpleDateFormat("yyyy-MM-dd");
             date = fDate.parse(sDate);
         }catch (ParseException pe){
             pe.printStackTrace();

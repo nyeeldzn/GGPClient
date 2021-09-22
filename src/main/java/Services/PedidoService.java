@@ -4,6 +4,7 @@ import DTO.OrdemPedidoDTO;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import helpers.HTTPRequest.DefaultRequests;
+import models.DateBetweenHelper;
 import models.OrdemPedido;
 
 import java.io.IOException;
@@ -39,6 +40,16 @@ public class PedidoService {
 
     public static ArrayList<OrdemPedido> findAllByStatus(Integer status){
         ArrayList<OrdemPedidoDTO> pedidosDTO = findAllDTOByStatus(status);
+        ArrayList<OrdemPedido> pedidos = new ArrayList<>();
+        for(int i = 0; i<pedidosDTO.size(); i++){
+            pedidos.add(OrdemPedidoDTO.toOrdemPedido(pedidosDTO.get(i)));
+        }
+
+        return pedidos;
+    }
+
+    public static ArrayList<OrdemPedido> findAllByDate(DateBetweenHelper dBH){
+        ArrayList<OrdemPedidoDTO> pedidosDTO = findAllDTOByDate(dBH);
         ArrayList<OrdemPedido> pedidos = new ArrayList<>();
         for(int i = 0; i<pedidosDTO.size(); i++){
             pedidos.add(OrdemPedidoDTO.toOrdemPedido(pedidosDTO.get(i)));
@@ -88,6 +99,27 @@ public class PedidoService {
 
         return pedidosDTO;
     }
+
+    public static ArrayList<OrdemPedidoDTO> findAllDTOByDate(DateBetweenHelper dBH){
+        ArrayList<OrdemPedidoDTO> pedidosDTO = new ArrayList<>();
+        Gson gson = new Gson();
+        String dBHJson = gson.toJson(dBH);
+        String output = DefaultRequests.postObject("/pedidos/buscaPorData", dBHJson);
+
+        Gson gson2 = new Gson();
+
+        Type userListType = new TypeToken<ArrayList<OrdemPedidoDTO>>() {
+        }.getType();
+
+        pedidosDTO = gson2.fromJson(output, userListType);
+
+        for(int i = 0; i<pedidosDTO.size(); i++){
+            System.out.println("Pedido de id: " + pedidosDTO.get(i).getId() + " recuperado." );
+        }
+
+        return pedidosDTO;
+    }
+
 
 
     public static OrdemPedido insert(OrdemPedido pedido){
