@@ -136,7 +136,7 @@ public class pedidosController implements Initializable {
             dataInicial = onDate(pickerDataInicial);
         });
         pickerDataInicial.setConverter(new StringConverter<LocalDate>() {
-            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
             @Override
             public String toString(LocalDate date) {
@@ -161,7 +161,7 @@ public class pedidosController implements Initializable {
                 nowOnDate()
         );
         pickerDataFinal.setOnAction((e) -> {
-            dataInicial = onDate(pickerDataInicial);
+            dataFinal = onDate(pickerDataFinal);
         });
         pickerDataFinal.setConverter(new StringConverter<LocalDate>() {
             DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
