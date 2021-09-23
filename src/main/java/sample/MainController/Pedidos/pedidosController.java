@@ -4,6 +4,7 @@ import Services.PedidoService;
 import com.jfoenix.controls.*;
 import helpers.DefaultComponents;
 import helpers.intentData;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -88,9 +89,6 @@ public class pedidosController implements Initializable {
 
     @FXML
     private TableColumn<OrdemPedido, String> pagamentoCol;
-
-    @FXML
-    private TableColumn<OrdemPedido, String> envioCol;
 
     @FXML
     private TableColumn<OrdemPedido, String> entradaCol;
@@ -225,12 +223,11 @@ public class pedidosController implements Initializable {
     }
     private void prepararTableView() {
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
-        nomeCol.setCellValueFactory(new PropertyValueFactory<>("cliente_nome"));
-        pagamentoCol.setCellValueFactory(new PropertyValueFactory<>("forma_envio"));
-        envioCol.setCellValueFactory(new PropertyValueFactory<>("forma_pagamento"));
-        entradaCol.setCellValueFactory(new PropertyValueFactory<>("data_entrada"));
-        triagemCol.setCellValueFactory(new PropertyValueFactory<>("data_triagem"));
-        finalizadoCol.setCellValueFactory(new PropertyValueFactory<>("data_finalizado"));
+        nomeCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getCliente().getNome()));
+        pagamentoCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getForma_pagamento()));
+        entradaCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getEntradaHora().toString()));
+        triagemCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getTriagemHora().toString()));
+        finalizadoCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getFinalizadoHora().toString()));
         ContextMenu cm = new ContextMenu();
         MenuItem mi1 = new MenuItem("ABRIR DETALHES DO PEDIDO");
         cm.getItems().add(mi1);
@@ -348,29 +345,29 @@ public class pedidosController implements Initializable {
             switch (cb_selectedIndex) {
                 case 0:
                     System.out.println("Buscando nos Pedidos de Entrada");
-                    //query = "SELECT * FROM `Ordem_De_Pedido` WHERE `data_entrada` >= ? AND `data_entrada` <= ?";
-                    query = "SELECT * FROM `Pedidos` WHERE `status_id` =? AND `data_entrada` BETWEEN ?  AND ? ";
-                    listaPedidosEntrada = recuperarPedidosPorData(query, "1");
+                    DateBetweenHelper dBH4 = new DateBetweenHelper(dataInicial, dataFinal);
+                    System.out.println(dataInicial + "  " +  dataFinal);
+                    listaPedidosEntrada = FXCollections.observableArrayList(PedidoService.findAllByDateWithStatus(dBH4, 1));
                     tableView.setItems(listaPedidosEntrada);
                     break;
                 case 1:
                     System.out.println("Buscando nos Pedidos em Triagem");
-                    query = "SELECT * FROM `Pedidos` WHERE `status_id` =? AND `data_entrada` >= ? AND `data_entrada` <= ?";
-                    listaPedidosTriagem = recuperarPedidosPorData(query, "2");
+                    DateBetweenHelper dBH3 = new DateBetweenHelper(dataInicial, dataFinal);
+                    System.out.println(dataInicial + "  " +  dataFinal);
+                    listaPedidosTriagem = FXCollections.observableArrayList(PedidoService.findAllByDateWithMoreStatus(dBH3, Arrays.asList(2,3,4)));
                     tableView.setItems(listaPedidosTriagem);
                     break;
                 case 2:
                     System.out.println("Buscando nos Pedidos Finalizados");
-                    query = "SELECT * FROM `Pedidos` WHERE `status_id` =? AND `data_entrada` >= ? AND `data_entrada` <= ?";
-                    listaPedidosFinalizado = recuperarPedidosPorData(query, "3");
+                    DateBetweenHelper dBH2 = new DateBetweenHelper(dataInicial, dataFinal);
+                    System.out.println(dataInicial + "  " +  dataFinal);
+                    listaPedidosFinalizado = FXCollections.observableArrayList(PedidoService.findAllByDateWithStatus(dBH2, 5));
                     tableView.setItems(listaPedidosFinalizado);
                     break;
                 case 3:
                     listaPedidosTodos.clear();
                     System.out.println("Buscando em todos os status com DATAS");
-                    int size = listaComboBox.size();
                     DateBetweenHelper dBH = new DateBetweenHelper(dataInicial,dataFinal);
-                    System.out.println(dBH);
                     System.out.println(dataInicial + "  " +  dataFinal);
                     listaPedidosTodos = FXCollections.observableArrayList(PedidoService.findAllByDate(dBH));
                     tableView.setItems(listaPedidosTodos);

@@ -58,6 +58,16 @@ public class PedidoService {
         return pedidos;
     }
 
+    public static ArrayList<OrdemPedido> findAllByDateWithStatus(DateBetweenHelper dBH, Integer status){
+        ArrayList<OrdemPedidoDTO> pedidosDTO = findAllDTOByDateWithStatus(dBH, status);
+        ArrayList<OrdemPedido> pedidos = new ArrayList<>();
+        for(int i = 0; i<pedidosDTO.size(); i++){
+            pedidos.add(OrdemPedidoDTO.toOrdemPedido(pedidosDTO.get(i)));
+        }
+
+        return pedidos;
+    }
+
 
 
         public static ArrayList<OrdemPedidoDTO> findAllDTO(){
@@ -120,6 +130,27 @@ public class PedidoService {
         return pedidosDTO;
     }
 
+    public static ArrayList<OrdemPedidoDTO> findAllDTOByDateWithStatus(DateBetweenHelper dBH, Integer status){
+        ArrayList<OrdemPedidoDTO> pedidosDTO = new ArrayList<>();
+        Gson gson = new Gson();
+        String dBHJson = gson.toJson(dBH);
+        String output = DefaultRequests.postObject("/pedidos/buscaPorDataComStatus/" + status, dBHJson);
+
+        Gson gson2 = new Gson();
+
+        Type userListType = new TypeToken<ArrayList<OrdemPedidoDTO>>() {
+        }.getType();
+
+        pedidosDTO = gson2.fromJson(output, userListType);
+
+        for(int i = 0; i<pedidosDTO.size(); i++){
+            System.out.println("Pedido de id: " + pedidosDTO.get(i).getId() + " recuperado." );
+        }
+
+        return pedidosDTO;
+    }
+
+
 
 
     public static OrdemPedido insert(OrdemPedido pedido){
@@ -159,4 +190,16 @@ public class PedidoService {
 
             return lista;
         }
+
+    public static List<OrdemPedido> findAllByDateWithMoreStatus(DateBetweenHelper dBH, List<Integer> status){
+        List<OrdemPedido> lista = new ArrayList<>();
+
+        for(int i = 0; i < status.size(); i++){
+            List<OrdemPedido> tempList;
+            tempList = findAllByDateWithStatus(dBH,status.get(i));
+            lista.addAll(tempList);
+        }
+
+        return lista;
+    }
     }
