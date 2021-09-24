@@ -53,7 +53,7 @@ public class DefaultRequests {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("JSON de SAIDA" + output);
+
         return output;
     }
 

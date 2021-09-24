@@ -2,6 +2,7 @@ package sample.MainController.Clientes;
 
 import Services.BairroService;
 import Services.ClienteService;
+import Services.PedidoService;
 import com.jfoenix.controls.*;
 import helpers.*;
 import javafx.beans.value.ChangeListener;
@@ -39,10 +40,7 @@ import jxl.Workbook;
 import jxl.format.Colour;
 import jxl.write.Label;
 import jxl.write.*;
-import models.Bairro;
-import models.Cliente;
-import models.OrdemPedido;
-import models.Usuario;
+import models.*;
 import sample.MainController.MainController;
 
 import java.io.File;
@@ -56,6 +54,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -474,32 +473,33 @@ public class clientesController implements Initializable {
                     case 0:
                         System.out.println("Buscando nos Pedidos de Entrada");
                         //busca na entrada
+                        PedidoFindJsonHelper dBH2 = new PedidoFindJsonHelper(dataInicial, dataFinal, cliente);
+                        listaPedidos = FXCollections.observableArrayList(PedidoService.findAllByDateWithStatusFromClient(dBH2, 1));
                         tableViewPedidos.setItems(listaPedidos);
                         break;
                     case 1:
                         System.out.println("Buscando nos Pedidos em Triagem");
                         //busca na triagem
+                        PedidoFindJsonHelper dBH3 = new PedidoFindJsonHelper(dataInicial, dataFinal, cliente);
+                        listaPedidosTriagem = FXCollections.observableArrayList(PedidoService.findAllByDateWithMoreStatusFromClient(dBH3, Arrays.asList(2,3,4)));
                         tableViewPedidos.setItems(listaPedidosTriagem);
                         break;
                     case 2:
                         System.out.println("Buscando nos Pedidos Finalizados");
                         //busca nos finalizados
+                        PedidoFindJsonHelper dBH1 = new PedidoFindJsonHelper(dataInicial, dataFinal, cliente);
+                        listaPedidosFinalizados = FXCollections.observableArrayList(PedidoService.findAllByDateWithStatusFromClient(dBH1, 5));
                         tableViewPedidos.setItems(listaPedidosFinalizados);
                         break;
                     case 3:
                         listaPedidosTodos.clear();
                         //busca em todos os pedidos
-                        listaPedidosTodos = recuperarPedidosPorData(query, "");
+                        PedidoFindJsonHelper dBH = new PedidoFindJsonHelper(dataInicial, dataFinal, cliente);
+                        listaPedidosTodos = FXCollections.observableArrayList(PedidoService.findAllByDateFromClient(dBH));
                                     tableViewPedidos.setItems(listaPedidosTodos);
                                     break;
                 }
             }
-            private ObservableList<OrdemPedido> recuperarPedidosPorData(String query, String table) throws SQLException{
-                ObservableList<OrdemPedido> ped = FXCollections.observableArrayList();
-
-                return ped;
-
-                }
 
             private void recuperarClientes() throws SQLException {
                 //busca todos os clientes
@@ -675,7 +675,7 @@ public class clientesController implements Initializable {
                 });
 
                 datePickerInicial.setConverter(new StringConverter<LocalDate>() {
-                    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+                    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
                     @Override
                     public String toString(LocalDate date) {
@@ -709,7 +709,7 @@ public class clientesController implements Initializable {
                 });
 
                 datePickerFinal.setConverter(new StringConverter<LocalDate>() {
-                    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+                    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
                     @Override
                     public String toString(LocalDate date) {
@@ -740,9 +740,7 @@ public class clientesController implements Initializable {
 
                 vboxPrincipal.getChildren().addAll(row2, tableViewPedidos, row3);
 
-                btnSair.setOnAction((event -> {
-                    dialog.close();
-                }));
+                btnSair.setOnAction(e -> dialog.close());
 
                 btnPesquisar.setOnAction((e) -> {
                     try {
@@ -870,14 +868,13 @@ public class clientesController implements Initializable {
                 String dataFormatada = formatData(localDate.toString());
                 //dataInicial = formatData(localDate.toString());
                 //datePicker.setPromptText(dataInicial);
-                System.out.println(dataFormatada);
                 return dataFormatada;
             }
             public String formatData (String data){
                 SimpleDateFormat sdf = null;
                 Date d = null;
                 try{
-                    sdf = new SimpleDateFormat("yy-MM-dd");
+                    sdf = new SimpleDateFormat("yyyy-MM-dd");
                     d = sdf.parse(data);
                     sdf.applyPattern("yyyy-MM-dd");
                 } catch (ParseException e) {

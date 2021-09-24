@@ -357,7 +357,7 @@ public class  detalhesPedidoController implements Initializable {
             newProdutosList.add(produtosPedido.get(i));
         }
         pedido.setProdutos(newProdutosList);
-        System.out.println(pedido);
+        System.out.println("Pedido Enviado para atualizacao: \n" + pedido);
         switch(PedidoService.update(pedido)){
             case 0:
                 JFXDialog d = AlertDialogModel.alertDialogErro("Houve um problema ao salvar o pedido", stackPane);
@@ -469,6 +469,7 @@ public class  detalhesPedidoController implements Initializable {
     private void recuperarDadosPedido(){
         //recuperar dados do pedido
         pedido = PedidoService.getById(pedido_id);
+        System.out.println("Pedido Recuperado: \n" + pedido);
         if(pedido != null){
             setData(pedido);
         }else{
@@ -479,7 +480,7 @@ public class  detalhesPedidoController implements Initializable {
 
     private void setData(OrdemPedido pedido) {
         textNome.setText(pedido.getCliente().getNome());
-        SimpleDateFormat fDate = new SimpleDateFormat("yyyy:MM:dd");
+        SimpleDateFormat fDate = new SimpleDateFormat("yyyy/MM/dd");
         textData_Entrada.setText(fDate.format(pedido.getEntradaDate()));
         textEndereco.setText(pedido.getCliente().getEndereco() + ", " + pedido.getCliente().getBairro().getNome());
         textTelefone.setText(pedido.getCliente().getTelefone());

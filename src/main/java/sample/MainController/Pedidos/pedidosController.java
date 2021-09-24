@@ -30,7 +30,8 @@ import jxl.Workbook;
 import jxl.format.Colour;
 import jxl.write.Label;
 import jxl.write.*;
-import models.DateBetweenHelper;
+import models.Cliente;
+import models.PedidoFindJsonHelper;
 import models.OrdemPedido;
 import sample.MainController.MainController;
 
@@ -345,21 +346,21 @@ public class pedidosController implements Initializable {
             switch (cb_selectedIndex) {
                 case 0:
                     System.out.println("Buscando nos Pedidos de Entrada");
-                    DateBetweenHelper dBH4 = new DateBetweenHelper(dataInicial, dataFinal);
+                    PedidoFindJsonHelper dBH4 = new PedidoFindJsonHelper(dataInicial, dataFinal);
                     System.out.println(dataInicial + "  " +  dataFinal);
                     listaPedidosEntrada = FXCollections.observableArrayList(PedidoService.findAllByDateWithStatus(dBH4, 1));
                     tableView.setItems(listaPedidosEntrada);
                     break;
                 case 1:
                     System.out.println("Buscando nos Pedidos em Triagem");
-                    DateBetweenHelper dBH3 = new DateBetweenHelper(dataInicial, dataFinal);
+                    PedidoFindJsonHelper dBH3 = new PedidoFindJsonHelper(dataInicial, dataFinal);
                     System.out.println(dataInicial + "  " +  dataFinal);
                     listaPedidosTriagem = FXCollections.observableArrayList(PedidoService.findAllByDateWithMoreStatus(dBH3, Arrays.asList(2,3,4)));
                     tableView.setItems(listaPedidosTriagem);
                     break;
                 case 2:
                     System.out.println("Buscando nos Pedidos Finalizados");
-                    DateBetweenHelper dBH2 = new DateBetweenHelper(dataInicial, dataFinal);
+                    PedidoFindJsonHelper dBH2 = new PedidoFindJsonHelper(dataInicial, dataFinal);
                     System.out.println(dataInicial + "  " +  dataFinal);
                     listaPedidosFinalizado = FXCollections.observableArrayList(PedidoService.findAllByDateWithStatus(dBH2, 5));
                     tableView.setItems(listaPedidosFinalizado);
@@ -367,7 +368,7 @@ public class pedidosController implements Initializable {
                 case 3:
                     listaPedidosTodos.clear();
                     System.out.println("Buscando em todos os status com DATAS");
-                    DateBetweenHelper dBH = new DateBetweenHelper(dataInicial,dataFinal);
+                    PedidoFindJsonHelper dBH = new PedidoFindJsonHelper(dataInicial,dataFinal, new Cliente());
                     System.out.println(dataInicial + "  " +  dataFinal);
                     listaPedidosTodos = FXCollections.observableArrayList(PedidoService.findAllByDate(dBH));
                     tableView.setItems(listaPedidosTodos);

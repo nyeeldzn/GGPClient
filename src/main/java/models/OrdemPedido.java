@@ -152,13 +152,13 @@ public class OrdemPedido {
     }
 
     public void setEntradaDate(Date entradaDate) {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         this.entradaDate = format.format(entradaDate);
     }
 
     public Date getEntradaHora() {
         Date strr = null;
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         try {
             strr = format.parse(entradaHora);
         }catch (ParseException e){
@@ -267,5 +267,27 @@ public class OrdemPedido {
             break;
         }
         return status;
+    }
+
+
+    @Override
+    public String toString() {
+        return "OrdemPedido{" +
+                "id=" + id +
+                ", cliente=" + cliente +
+                ", operador=" + operador +
+                ", entregador='" + entregador + '\'' +
+                ", forma_pagamento='" + forma_pagamento + '\'' +
+                ", entradaDate='" + entradaDate + '\'' +
+                ", entradaHora='" + entradaHora + '\'' +
+                ", triagemHora='" + triagemHora + '\'' +
+                ", checkoutHora='" + checkoutHora + '\'' +
+                ", enviadoHora='" + enviadoHora + '\'' +
+                ", finalizadoHora='" + finalizadoHora + '\'' +
+                ", fonte_pedido='" + fonte_pedido + '\'' +
+                ", caixa_responsavel='" + caixa_responsavel + '\'' +
+                ", status=" + status +
+                ", orderProducts=" + orderProducts +
+                '}';
     }
 }

@@ -303,14 +303,22 @@ public class novoPedidoController implements Initializable {
                 case ENTER:
                     verificarClienteExistente(edtNome.getText());
                     pedidoAtual.setCliente(selected_Cliente);
-                    salvarPedido();
+                    try {
+                        salvarPedido();
+                    } catch (ParseException ex) {
+                        ex.printStackTrace();
+                    }
                     break;
             }
         });
         btnSalvar.setOnAction((e) -> {
             verificarClienteExistente(edtNome.getText());
             pedidoAtual.setCliente(selected_Cliente);
-            salvarPedido();
+            try {
+                salvarPedido();
+            } catch (ParseException ex) {
+                ex.printStackTrace();
+            }
         });
 
     }
@@ -447,13 +455,14 @@ public class novoPedidoController implements Initializable {
             tableView.setItems(sortedData);
         });
     }
-    private void salvarPedido(){
+    private void salvarPedido() throws ParseException {
         Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
         Date horario = new Date(System.currentTimeMillis());
 
         pedidoAtual.setForma_pagamento(edtFormaPagamento.getText());
         pedidoAtual.setFonte_pedido(edtFonte.getText());
-        pedidoAtual.setEntradaDate(date);
+        pedidoAtual.setEntradaDate(sdf.parse(sdf.format(date)));
         pedidoAtual.setEntradaHora(horario);
         pedidoAtual.setTriagemHora(horario);
         pedidoAtual.setCheckoutHora(horario);

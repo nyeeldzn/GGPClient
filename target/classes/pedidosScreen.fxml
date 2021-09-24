@@ -135,7 +135,6 @@
                 <TableColumn fx:id="idCol" prefWidth="35.0" text="ID" />
                 <TableColumn fx:id="nomeCol" prefWidth="228.0" text="CLIENTE NOME" />
                   <TableColumn fx:id="pagamentoCol" prefWidth="120.0" text="PAGAMENTO" />
-                  <TableColumn fx:id="envioCol" prefWidth="108.66665649414062" text="ENVIO" />
                   <TableColumn fx:id="entradaCol" prefWidth="159.33331298828125" text="ENTRADA" />
                   <TableColumn fx:id="triagemCol" prefWidth="162.33331298828125" text="TRIAGEM" />
                   <TableColumn fx:id="finalizadoCol" prefWidth="177.66668701171875" text="FINALIZADO" />

@@ -4,8 +4,8 @@ import DTO.OrdemPedidoDTO;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import helpers.HTTPRequest.DefaultRequests;
-import models.DateBetweenHelper;
 import models.OrdemPedido;
+import models.PedidoFindJsonHelper;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -48,7 +48,7 @@ public class PedidoService {
         return pedidos;
     }
 
-    public static ArrayList<OrdemPedido> findAllByDate(DateBetweenHelper dBH){
+    public static ArrayList<OrdemPedido> findAllByDate(PedidoFindJsonHelper dBH){
         ArrayList<OrdemPedidoDTO> pedidosDTO = findAllDTOByDate(dBH);
         ArrayList<OrdemPedido> pedidos = new ArrayList<>();
         for(int i = 0; i<pedidosDTO.size(); i++){
@@ -58,7 +58,7 @@ public class PedidoService {
         return pedidos;
     }
 
-    public static ArrayList<OrdemPedido> findAllByDateWithStatus(DateBetweenHelper dBH, Integer status){
+    public static ArrayList<OrdemPedido> findAllByDateWithStatus(PedidoFindJsonHelper dBH, Integer status){
         ArrayList<OrdemPedidoDTO> pedidosDTO = findAllDTOByDateWithStatus(dBH, status);
         ArrayList<OrdemPedido> pedidos = new ArrayList<>();
         for(int i = 0; i<pedidosDTO.size(); i++){
@@ -80,9 +80,6 @@ public class PedidoService {
 
             pedidosDTO = gson.fromJson(json, userListType);
 
-            for(int i = 0; i<pedidosDTO.size(); i++){
-                System.out.println("Pedido de id: " + pedidosDTO.get(i).getId() + " recuperado." );
-            }
 
             return pedidosDTO;
         }
@@ -103,14 +100,11 @@ public class PedidoService {
            ioe.printStackTrace();
         }
 
-        for(int i = 0; i<pedidosDTO.size(); i++){
-            System.out.println("Pedido de id: " + pedidosDTO.get(i).getId() + " recuperado." );
-        }
 
         return pedidosDTO;
     }
 
-    public static ArrayList<OrdemPedidoDTO> findAllDTOByDate(DateBetweenHelper dBH){
+    public static ArrayList<OrdemPedidoDTO> findAllDTOByDate(PedidoFindJsonHelper dBH){
         ArrayList<OrdemPedidoDTO> pedidosDTO = new ArrayList<>();
         Gson gson = new Gson();
         String dBHJson = gson.toJson(dBH);
@@ -123,14 +117,12 @@ public class PedidoService {
 
         pedidosDTO = gson2.fromJson(output, userListType);
 
-        for(int i = 0; i<pedidosDTO.size(); i++){
-            System.out.println("Pedido de id: " + pedidosDTO.get(i).getId() + " recuperado." );
-        }
+
 
         return pedidosDTO;
     }
 
-    public static ArrayList<OrdemPedidoDTO> findAllDTOByDateWithStatus(DateBetweenHelper dBH, Integer status){
+    public static ArrayList<OrdemPedidoDTO> findAllDTOByDateWithStatus(PedidoFindJsonHelper dBH, Integer status){
         ArrayList<OrdemPedidoDTO> pedidosDTO = new ArrayList<>();
         Gson gson = new Gson();
         String dBHJson = gson.toJson(dBH);
@@ -143,16 +135,68 @@ public class PedidoService {
 
         pedidosDTO = gson2.fromJson(output, userListType);
 
-        for(int i = 0; i<pedidosDTO.size(); i++){
-            System.out.println("Pedido de id: " + pedidosDTO.get(i).getId() + " recuperado." );
-        }
 
         return pedidosDTO;
     }
 
 
+    //Filtro por Cliente
+    public static ArrayList<OrdemPedido> findAllByDateFromClient(PedidoFindJsonHelper dBH){
+        ArrayList<OrdemPedidoDTO> pedidosDTO = findAllDTOByDateFromClient(dBH);
+        ArrayList<OrdemPedido> pedidos = new ArrayList<>();
+        for(int i = 0; i<pedidosDTO.size(); i++){
+            pedidos.add(OrdemPedidoDTO.toOrdemPedido(pedidosDTO.get(i)));
+        }
+
+        return pedidos;
+    }
+
+    public static ArrayList<OrdemPedido> findAllByDateWithStatusFromClient(PedidoFindJsonHelper dBH, Integer status){
+        ArrayList<OrdemPedidoDTO> pedidosDTO = findAllDTOByDateWithStatusFromClient(dBH, status);
+        ArrayList<OrdemPedido> pedidos = new ArrayList<>();
+        for(int i = 0; i<pedidosDTO.size(); i++){
+            pedidos.add(OrdemPedidoDTO.toOrdemPedido(pedidosDTO.get(i)));
+        }
+
+        return pedidos;
+    }
+
+    public static ArrayList<OrdemPedidoDTO> findAllDTOByDateFromClient(PedidoFindJsonHelper dBH){
+        ArrayList<OrdemPedidoDTO> pedidosDTO = new ArrayList<>();
+        Gson gson = new Gson();
+        String dBHJson = gson.toJson(dBH);
+        String output = DefaultRequests.postObject("/pedidos/buscaPorDataPorCliente", dBHJson);
+
+        Gson gson2 = new Gson();
+
+        Type userListType = new TypeToken<ArrayList<OrdemPedidoDTO>>() {
+        }.getType();
+
+        pedidosDTO = gson2.fromJson(output, userListType);
 
 
+        return pedidosDTO;
+    }
+
+    public static ArrayList<OrdemPedidoDTO> findAllDTOByDateWithStatusFromClient(PedidoFindJsonHelper dBH, Integer status){
+        ArrayList<OrdemPedidoDTO> pedidosDTO = new ArrayList<>();
+        Gson gson = new Gson();
+        String dBHJson = gson.toJson(dBH);
+        String output = DefaultRequests.postObject("/pedidos/buscaPorDataComStatusPorCliente/" + status, dBHJson);
+
+        Gson gson2 = new Gson();
+
+        Type userListType = new TypeToken<ArrayList<OrdemPedidoDTO>>() {
+        }.getType();
+
+        pedidosDTO = gson2.fromJson(output, userListType);
+
+
+        return pedidosDTO;
+    }
+
+
+    //CRUD
     public static OrdemPedido insert(OrdemPedido pedido){
             Gson gson = new Gson();
             String input = gson.toJson(pedido);
@@ -191,7 +235,7 @@ public class PedidoService {
             return lista;
         }
 
-    public static List<OrdemPedido> findAllByDateWithMoreStatus(DateBetweenHelper dBH, List<Integer> status){
+        public static List<OrdemPedido> findAllByDateWithMoreStatus(PedidoFindJsonHelper dBH, List<Integer> status){
         List<OrdemPedido> lista = new ArrayList<>();
 
         for(int i = 0; i < status.size(); i++){
@@ -202,4 +246,17 @@ public class PedidoService {
 
         return lista;
     }
+
+        public static List<OrdemPedido> findAllByDateWithMoreStatusFromClient(PedidoFindJsonHelper dBH, List<Integer> status){
+        List<OrdemPedido> lista = new ArrayList<>();
+
+        for(int i = 0; i < status.size(); i++){
+            List<OrdemPedido> tempList;
+            tempList = findAllByDateWithStatusFromClient(dBH,status.get(i));
+            lista.addAll(tempList);
+        }
+
+        return lista;
     }
+
+}
