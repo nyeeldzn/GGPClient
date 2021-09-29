@@ -54,4 +54,8 @@ public class Produto implements Serializable {
         return list;
     }
 
+    @Override
+    public String toString() {
+        return nome;
+    }
 }

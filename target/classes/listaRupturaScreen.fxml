@@ -21,8 +21,8 @@
                 <TableView fx:id="tableLista" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                     <columns>
                         <TableColumn fx:id="idCol" prefWidth="34.0" text="ID" />
-                        <TableColumn fx:id="dataeCol" prefWidth="830.0000038146973" text="DATA LISTA" />
-                        <TableColumn fx:id="responsavelCol" prefWidth="131.0" text="RESPONSÁVEL" />
+                        <TableColumn fx:id="dataeCol" prefWidth="300" text="DATA" />
+                        <TableColumn fx:id="descCol" prefWidth="600" text="DESCRICAO" />
                     </columns>
                     <BorderPane.margin>
                         <Insets />

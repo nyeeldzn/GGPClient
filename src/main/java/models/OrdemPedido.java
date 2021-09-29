@@ -151,6 +151,18 @@ public class OrdemPedido {
         return strr;
     }
 
+    public String getEntradaDateString() {
+        String dateString = "";
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            dateString = format.format(format.parse(entradaDate));
+        }catch (ParseException e){
+            e.printStackTrace();
+        }
+
+        return dateString;
+    }
+
     public void setEntradaDate(Date entradaDate) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         this.entradaDate = format.format(entradaDate);

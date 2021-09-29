@@ -1,38 +1,62 @@
 package models;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ListaRuptura {
 
-    int id;
-    String data;
-    int responsavel_id;
+    Long id;
+    String desc;
+    String date;
 
-    public ListaRuptura(int id, String data, int responsavel_id) {
+    private List<RupturaProduto> produtoList;
+
+    public ListaRuptura () {}
+
+    public ListaRuptura(Long id, String desc, String date) {
         this.id = id;
-        this.data = data;
-        this.responsavel_id = responsavel_id;
+        this.desc = desc;
+        this.date = date;
     }
 
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public String getData() {
-        return data;
+    public String getDesc() {
+        return desc;
     }
 
-    public void setData(String data) {
-        this.data = data;
+    public void setDesc(String desc) {
+        this.desc = desc;
     }
 
-    public int getResponsavel_id() {
-        return responsavel_id;
+    public String getDate() {
+        return date;
     }
 
-    public void setResponsavel_id(int responsavel_id) {
-        this.responsavel_id = responsavel_id;
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public List<RupturaProduto> getProdutoList() {
+        return produtoList;
+    }
+
+    public void setProdutoList(List<RupturaProduto> produtoList) {
+        this.produtoList = produtoList;
+    }
+
+    public static List<RupturaProduto> produtoListToRupturaProduto (ListaRuptura listaRuptura, List<Produto> produtos) {
+        List<RupturaProduto> list = new ArrayList<>();
+        for(int i = 0; i < produtos.size(); i++){
+            RupturaProduto newObj = new RupturaProduto(null, produtos.get(i),listaRuptura);
+            list.add(newObj);
+        }
+        return list;
     }
 }

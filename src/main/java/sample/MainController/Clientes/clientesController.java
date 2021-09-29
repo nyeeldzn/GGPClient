@@ -5,6 +5,8 @@ import Services.ClienteService;
 import Services.PedidoService;
 import com.jfoenix.controls.*;
 import helpers.*;
+import javafx.beans.property.SimpleLongProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -210,9 +212,9 @@ public class clientesController implements Initializable {
           }
             private void prepararTableView(){
                         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
-                        nomeCol.setCellValueFactory(new PropertyValueFactory<>("nome"));
-                        endCol.setCellValueFactory(new PropertyValueFactory<>("endereco"));
-                        telCol.setCellValueFactory(new PropertyValueFactory<>("telefone"));
+                        nomeCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getNome()));
+                        endCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getEndereco() + c.getValue().getBairro().getNome()));
+                        telCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getTelefone()));
                         tableView.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Cliente>() {
                             @Override
                             public void changed(ObservableValue<? extends Cliente> observable, Cliente oldValue, Cliente newValue) {
@@ -500,7 +502,6 @@ public class clientesController implements Initializable {
                                     break;
                 }
             }
-
             private void recuperarClientes() throws SQLException {
                 //busca todos os clientes
                 listaClientes.clear();
@@ -731,7 +732,7 @@ public class clientesController implements Initializable {
                 });
 
                 row2.getChildren().addAll(comboBoxFiltroStatus, datePickerInicial, datePickerFinal, btnPrint, btnPesquisar);
-                row2.setStyle("-fx-background-color: navy; -fx-background-radius: 15");
+                row2.setStyle("-fx-background-color: navy; -fx-background-radius: 5");
                 row2.setPadding(new Insets(10,10,10,10));
                 comboBoxFiltroStatus.setPrefWidth(150);
                 comboBoxFiltroStatus.getItems().addAll(listaComboBox);
@@ -762,25 +763,25 @@ public class clientesController implements Initializable {
                 TableView<OrdemPedido> tableView = new TableView();
                 double prefWidth = 650;
                 tableView.setPrefWidth(prefWidth);
-                TableColumn<OrdemPedido, Integer> idCol = new TableColumn<>();
+                TableColumn<OrdemPedido, Long> idCol = new TableColumn<>();
                 idCol.setText("ID");
                 idCol.setPrefWidth(prefWidth/10);
-                idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
+                idCol.setCellValueFactory(c -> new SimpleLongProperty(c.getValue().getId()).asObject());
 
                 TableColumn<OrdemPedido, String> Data1Col = new TableColumn<>();
                 Data1Col.setText("DATA ENTRADA");
                 Data1Col.setPrefWidth(prefWidth/3.5);
-                Data1Col.setCellValueFactory(new PropertyValueFactory<>("data_entrada"));
+                Data1Col.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getEntradaDateString()));
 
                 TableColumn<OrdemPedido, String> Data2Col = new TableColumn<>();
                 Data2Col.setText("H. TRIAGEM");
                 Data2Col.setPrefWidth(prefWidth/3.5);
-                Data2Col.setCellValueFactory(new PropertyValueFactory<>("horario_triagem"));
+                Data2Col.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().dateToTimeString(c.getValue().getTriagemHora())));
 
                 TableColumn<OrdemPedido, String> Data3Col = new TableColumn<>();
                 Data3Col.setText("H. FINALIZADO");
                 Data3Col.setPrefWidth(prefWidth/3.5);
-                Data3Col.setCellValueFactory(new PropertyValueFactory<>("horario_finalizado"));
+                Data3Col.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().dateToTimeString(c.getValue().getFinalizadoHora())));
                 tableView.getColumns().addAll(idCol, Data1Col, Data2Col, Data3Col);
                 ContextMenu cm = new ContextMenu();
                 MenuItem mi1 = new MenuItem("ABRIR DETALHES DO PEDIDO");

@@ -1,11 +1,13 @@
 package sample;
 
+import Services.ListaRupturaService;
+import Services.ProdutoService;
 import com.jfoenix.controls.*;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import helpers.AlertDialogModel;
 import helpers.DefaultComponents;
 import helpers.ExcluirDialogModel;
-import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -24,15 +26,10 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.util.StringConverter;
-import models.ListaRuptura;
-import models.Produto;
-import models.Usuario;
+import models.*;
 
 import java.io.IOException;
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -40,6 +37,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import static helpers.DefaultComponents.*;
@@ -51,11 +49,11 @@ public class listaRupturaController implements Initializable {
     @FXML
     private TableView<ListaRuptura> tableLista;
     @FXML
-    private TableColumn<ListaRuptura, Integer> idCol;
+    private TableColumn<ListaRuptura, Long> idCol;
     @FXML
     private TableColumn<ListaRuptura, String> dataeCol;
     @FXML
-    private TableColumn<ListaRuptura, String> responsavelCol;
+    private TableColumn<ListaRuptura, String> descCol;
     @FXML
     private JFXButton btnNovo;
     @FXML
@@ -71,9 +69,10 @@ public class listaRupturaController implements Initializable {
     @FXML
     private JFXButton btnSearch;
 
-    JFXTextField edt1;
+    JFXTextField edtProduto;
     JFXDialog dialog;
     TableView<Produto> tableProdutosLista;
+    JFXButton btnADD;
 
     String prod_nome;
     String dataInicial = null;
@@ -82,15 +81,9 @@ public class listaRupturaController implements Initializable {
     Usuario user;
     ListaRuptura modelLista;
     boolean isSelectedLista;
-    Produto produto;
+    Produto produtoSelecionado;
 
-    //db
-    String query = null;
-    PreparedStatement preparedStatement = null;
-    Connection connection = null;
-    ResultSet resultSet = null;
-    //db
-    ArrayList<Produto> produtos = new ArrayList();
+    List<Produto> produtos = FXCollections.observableArrayList();
     ObservableList<ListaRuptura> listaRupturas = FXCollections.observableArrayList();
     ObservableList<Produto> listaProdutos = FXCollections.observableArrayList();
 
@@ -99,11 +92,9 @@ public class listaRupturaController implements Initializable {
         setupComponents();
         recuperarusuario();
         verificarListaNoDia();
-        try {
-            recuperarProdutos();
-        } catch (SQLException exception) {
-            exception.printStackTrace();
-        }
+        recuperarProdutos();
+
+
     }
 
 
@@ -114,9 +105,7 @@ public class listaRupturaController implements Initializable {
         pickerDataInicial.setValue(
                 nowOnDate()
         );
-        pickerDataInicial.setOnAction((e) -> {
-            dataInicial = onDate(pickerDataInicial);
-        });
+        pickerDataInicial.setOnAction( e -> dataInicial = onDate(pickerDataInicial));
         pickerDataInicial.setConverter(new StringConverter<LocalDate>() {
             DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -141,9 +130,7 @@ public class listaRupturaController implements Initializable {
         pickerDataFinal.setValue(
                 nowOnDate()
         );
-        pickerDataFinal.setOnAction((e) -> {
-            dataFinal = onDate(pickerDataFinal);
-        });
+        pickerDataFinal.setOnAction(e -> dataFinal = onDate(pickerDataFinal));
         pickerDataFinal.setConverter(new StringConverter<LocalDate>() {
             DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -166,8 +153,8 @@ public class listaRupturaController implements Initializable {
             }
         });
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
-        dataeCol.setCellValueFactory(new PropertyValueFactory<>("data"));
-        responsavelCol.setCellValueFactory(new PropertyValueFactory<>("responsavel_id"));
+        dataeCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getDate()));
+        descCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getDesc()));
         btnNovo.setOnAction((e) -> {
             boolean state = verificarListaNoDia();
             if(state == true){
@@ -229,10 +216,11 @@ public class listaRupturaController implements Initializable {
     private boolean verificarListaNoDia() {
         System.out.println("Verificando Lista do dia");
         boolean state = false;
-        //recvuperar listas em um array
-        /*
+        PedidoFindJsonHelper dBH = new PedidoFindJsonHelper(dataAtual, dataAtual);
+        ObservableList<ListaRuptura> listaRupturasLocal = FXCollections.observableArrayList(ListaRupturaService.findAllByDate(dBH));
+
         System.out.println("Tamanho da lista: " + listaRupturasLocal.size());
-            if (listaRupturasLocal.size() < 1) {
+            if (listaRupturasLocal.size() <= 0) {
                 state = false;
                 JFXButton btnOK = defaultButton("Criar");
                 JFXButton btnNO = defaultButton("Não");
@@ -251,73 +239,29 @@ public class listaRupturaController implements Initializable {
                 recuperarTodosAsListas();
             }
 
-         */
         return state;
         }
     private void recuperarTodosAsListas() {
         listaRupturas.clear();
-        //recuperar lista rupturas
+        listaRupturas = FXCollections.observableArrayList(ListaRupturaService.findAll());
         tableLista.setItems(listaRupturas);
     }
     private void recuperarListasPorData() {
         //recuperar lista rupturas por data
+        listaRupturas.clear();
+        PedidoFindJsonHelper dBH = new PedidoFindJsonHelper(dataInicial, dataFinal);
+        listaRupturas = FXCollections.observableArrayList(ListaRupturaService.findAllByDate(dBH));
         tableLista.setItems(listaRupturas);
     }
 
     //metodos iniciais
 
     //metodos de negocios
-    private void salvarProduto(){
-        // connection = db_connect.getConnect();
-        prod_nome = edt1.getText().toUpperCase().trim();
-        if(prod_nome.isEmpty()){
-            JFXDialog dialog = AlertDialogModel.alertDialogErro("Preencha todos os campos", stackPane);
-            dialog.show();
-        }else{
-            for(int i = 1; i<produtos.size(); i++){
-                Long id = produtos.get(i).getId();
-                String nomerecup = produtos.get(i).getNome().toUpperCase().trim();
 
-                System.out.println(nomerecup);
-                System.out.println(prod_nome);
-                System.out.println(i);
-                System.out.println(produtos.size());
-
-                if(nomerecup.equals(prod_nome)){
-                    System.out.println("Finalizando for, adcionando produto.");
-                    i = produtos.size();
-                    System.out.println("ArraySize " + produtos.size() + "For size " + i);
-                    addproduto_pedido(id, nomerecup.toUpperCase().trim());
-                }else if(!(nomerecup.equals(prod_nome))){
-                    if(i == produtos.size() - 1 && !(prod_nome.equals(nomerecup))){
-                        System.out.println("Criando novo produto, finalizando for");
-                        i = i + 1;
-                        //boolean state = db_crud.insertProduto(id, prod_nome);
-                        if(true){
-                            try {
-                                System.out.println("Produto Criado: " + prod_nome);
-                                recuperarProdutoCriado(prod_nome);
-                                restartAdd();
-                            }catch (SQLException ex){
-                                ex.printStackTrace();
-                            }
-                        }
-                    }
-                }
-            }
-
-        }
-    }
 
     private void restartAdd() {
-        listaProdutos.clear();
-        try {
-            recuperarProdutosLista(modelLista.getId());
-        }catch (SQLException ex){
-            ex.printStackTrace();
-        }
-        edt1.clear();
-        edt1.requestFocus();
+        edtProduto.clear();
+        edtProduto.requestFocus();
     }
 
     private void recuperarProdutoCriado(String nome) throws SQLException {
@@ -341,8 +285,7 @@ public class listaRupturaController implements Initializable {
             dialog.close();
         });
         btnExcluir.setOnAction((e) -> {
-            //exluir item por id modelLista.get()
-            if(true){
+            if(ListaRupturaService.delete(modelLista.getId()) == 2){
                 refreshTable();
                 dialog.close();
             }else{
@@ -354,14 +297,22 @@ public class listaRupturaController implements Initializable {
     }
     private void criarLista() {
         //inserir lista de ruptura, retornar refreshtable caso ok
+        ListaRuptura list = new ListaRuptura(null, "Lista Padrao", dataAtual);
+        ListaRupturaService.insert(list);
+        recuperarTodosAsListas();
     }
 
-    private void recuperarProdutos() throws SQLException {
+    private void recuperarProdutos(){
         produtos.clear();
-        //recuperar todos os produtos
+        produtos = FXCollections.observableArrayList(ProdutoService.findAll());
     }
-    private void recuperarProdutosLista(int id) throws SQLException {
+    private void recuperarProdutosLista(){
         //recuperar produtos da lista pelo id da lista
+        listaProdutos.clear();
+        List<RupturaProduto> listaTemp = modelLista.getProdutoList();
+        for(int i = 0; i < listaTemp.size(); i++){
+            listaProdutos.add(listaTemp.get(i).getProduto());
+        }
         tableProdutosLista.setItems(listaProdutos);
     }
 
@@ -409,9 +360,9 @@ public class listaRupturaController implements Initializable {
             }
         }
         if(last>start){
-            edt1.setText(complete);
-            edt1.positionCaret(last);
-            edt1.selectPositionCaret(start);
+            edtProduto.setText(complete);
+            edtProduto.positionCaret(last);
+            edtProduto.selectPositionCaret(start);
         }
 
 
@@ -428,61 +379,39 @@ public class listaRupturaController implements Initializable {
                 formularioProdutosLista()
         );
         dialog.show();
-        try {
-            recuperarProdutosLista(modelLista.getId());
-        }catch (SQLException ex){
-            ex.printStackTrace();
-        }
+        recuperarProdutosLista();
     }
     public AnchorPane formularioProdutosLista(){
         AnchorPane pane = new AnchorPane();
         VBox vboxPrincipal = defaultVBox();
         JFXButton btnCancelar = defaultButton("SAIR");
-        JFXButton btnADD = DefaultComponents.buttonIcon("", "PLUS", 50);
-        btnADD.setOnAction((e) -> {
-            salvarProduto();
-        });
+        JFXButton btnSalvar = buttonIcon("SALVAR", "SAVE", 150);
+        btnADD = DefaultComponents.buttonIcon("", "PLUS", 50);
         tableProdutosLista = new TableView<>();
-        TableColumn<Produto, Integer> idCol = new TableColumn<>();
-        idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
-        idCol.setText("");
+        TableColumn<Produto, String> idCol = new TableColumn<>();
+        idCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getId().toString()));
+        idCol.setText("ID");
         TableColumn<Produto, String> nomeCol = new TableColumn<>();
-        nomeCol.setCellValueFactory(new PropertyValueFactory<>("nome"));
+        nomeCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getNome()));
         nomeCol.setText("Nome do Produto");
         nomeCol.setPrefWidth(400);
         tableProdutosLista.getColumns().addAll(idCol, nomeCol);
 
-        edt1 = textFieldPadrao(500);
-        edt1.setTextFormatter(new TextFormatter<Object>((change) -> {
+        edtProduto = textFieldPadrao(500);
+        edtProduto.setTextFormatter(new TextFormatter<Object>((change) -> {
             change.setText(change.getText().toUpperCase());
             return change;
         }));
-        edt1.setOnKeyPressed((e) -> {
-            switch (e.getCode()){
-                case BACK_SPACE:
-                    break;
-                case ENTER:
-                    edt1.setText(edt1.getText().toUpperCase());
-                    btnADD.requestFocus();
-                    break;
-                case SHIFT:
-                    break;
-                default:
-                    Platform.runLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            String txt = edt1.getText().toUpperCase();
-                            autoCompleteTextField(txt);
-                        }
-                    });
-            }
+
+        setupEdtProduto();
+
+        btnADD.setOnAction(e -> {
+            listaProdutos.add(produtoSelecionado);
+            restartAdd();
         });
-        btnADD.setOnKeyPressed((e) -> {
-            switch (e.getCode()){
-                case ENTER:
-                    salvarProduto();
-                    break;
-            }
+        btnADD.setOnKeyPressed(e -> {
+            listaProdutos.add(produtoSelecionado);
+            restartAdd();
         });
 
         HBox row1 = defaultHBox();
@@ -500,23 +429,26 @@ public class listaRupturaController implements Initializable {
 
         vBox.getChildren().addAll(texto, row1);
         row1.getChildren().addAll(
-                edt1, btnADD
+                edtProduto, btnADD
         );
 
         row3.getChildren().addAll(
-                btnCancelar
+                btnSalvar, btnCancelar
         );
 
         row3.setAlignment(Pos.CENTER_RIGHT);
 
         vboxPrincipal.getChildren().addAll(vBox, tableProdutosLista, row3);
 
-        btnCancelar.setOnAction((event -> {
-            dialog.close();
-        }));
+        btnCancelar.setOnAction(e -> dialog.close());
+        btnSalvar.setOnAction(e -> salvarLista());
+
+
         pane.getChildren().add(vboxPrincipal);
         return pane;
     }
+
+
 
     public JFXButton button(String texto, String glyph, double larguraPadrao){
         JFXButton button = new JFXButton(texto, FontIcon(glyph));
@@ -531,9 +463,74 @@ public class listaRupturaController implements Initializable {
         icon.setSize("35.0");
         return icon;
     }
+
+    private void setupEdtProduto() {
+        ArrayList<String> nomes = new ArrayList<>();
+        for(int i = 0; i<produtos.size(); i++){
+            nomes.add(produtos.get(i).getNome());
+        }
+
+        JFXAutoCompletePopup<Produto> autoCompletePopup = new JFXAutoCompletePopup<>();
+        autoCompletePopup.setPrefWidth(500);
+        autoCompletePopup.getSuggestions().addAll(produtos);
+
+        autoCompletePopup.setSelectionHandler(event -> {
+            edtProduto.setText(event.getObject().getNome());
+            produtoSelecionado = event.getObject();
+            btnADD.requestFocus();
+            // you can do other actions here when text completed
+        });
+
+        // filtering options
+        edtProduto.textProperty().addListener(observable -> {
+            autoCompletePopup.filter(string -> string.getNome().toLowerCase().contains(edtProduto.getText().toLowerCase()));
+            if (autoCompletePopup.getFilteredSuggestions().isEmpty() || edtProduto.getText().isEmpty()) {
+                autoCompletePopup.hide();
+                // if you remove textField.getText.isEmpty() when text field is empty it suggests all options
+                // so you can choose
+            } else {
+                autoCompletePopup.show(edtProduto);
+            }
+        });
+
+
+    }
+
+
     //objetos
 
     //metodos de controle
+
+    private boolean salvarLista() {
+        boolean state = false;
+        List<RupturaProduto> produtos = ListaRuptura.produtoListToRupturaProduto(modelLista, listaProdutos);
+        modelLista.setProdutoList(produtos);
+
+        System.out.println("Lista enviada para atualizacao: \n" + modelLista);
+        switch(ListaRupturaService.update(modelLista)){
+            case 0:
+                JFXDialog d = AlertDialogModel.alertDialogErro("Houve um problema ao salvar o pedido", stackPane);
+                d.show();
+                state = false;
+                break;
+            case 1:
+                JFXDialog a = AlertDialogModel.alertDialogErro("Houve um problema ao salvar o pedido", stackPane);
+                a.show();
+                state = false;
+                break;
+            case 2:
+                fecharJanela();
+                state = true;
+                break;
+        }
+
+        return state;
+    }
+
+    private void fecharJanela(){
+        dialog.close();
+    }
+
     private void refreshTable(){
         listaRupturas.clear();
         recuperarTodosAsListas();
