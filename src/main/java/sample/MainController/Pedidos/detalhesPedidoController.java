@@ -3,6 +3,7 @@ package sample.MainController.Pedidos;
 import Services.OrderProductService;
 import Services.PedidoService;
 import Services.ProdutoService;
+import com.google.gson.Gson;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Paragraph;
@@ -49,6 +50,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class  detalhesPedidoController implements Initializable {
 
@@ -187,6 +189,15 @@ public class  detalhesPedidoController implements Initializable {
                 // you can do other actions here when text completed
             });
 
+            edtNomeProduto.setOnKeyPressed((e) -> {
+                switch (e.getCode()){
+                    case ENTER:
+                        produtoAtual = verificarProdutoExistente(edtNomeProduto.getText());
+                        btnADD.requestFocus();
+                        break;
+                }
+            });
+
             // filtering options
             edtNomeProduto.textProperty().addListener(observable -> {
                 autoCompletePopup.filter(string -> string.toLowerCase().contains(edtNomeProduto.getText().toLowerCase()));
@@ -199,6 +210,8 @@ public class  detalhesPedidoController implements Initializable {
                 }
             });
     }
+
+
 
     //Metodos Iniciais
     private void setupComponentes() {
@@ -489,6 +502,38 @@ public class  detalhesPedidoController implements Initializable {
     //Metodos Iniciais
 
     //Metodos de Negocios
+    private Produto verificarProdutoExistente(String text) {
+        AtomicReference<Produto> produto = new AtomicReference<Produto>();
+        List<Produto> prodList = ProdutoService.getByNome(text);
+        if(prodList.size() <=0){
+            System.out.println("Produto Inexistente");
+            JFXButton btnOK = DefaultComponents.defaultButton("CRIAR");
+            btnOK.setOnAction(e -> {
+                String output = ProdutoService.insert(new Produto(null, text));
+                if(!(output.equals(""))){
+                    produto.set(jsonProdToObj(output));
+                    dialog.close();
+                    recuperarProdutos();
+                }else{
+                    JFXDialog dialogErro = AlertDialogModel.alertDialogErro("Houve um problema ao criar o produto, tente novamente.", stackPane);
+                    dialogErro.show();
+                }
+            });
+            dialog = AlertDialogModel.alertDialogAction("Produto nao encontrado, deseja criar um novo?",stackPane,btnOK);
+            dialog.show();
+        }else{
+            System.out.println("Produto existente");
+            produto.set(prodList.get(0));
+        }
+        return produto.get();
+    }
+
+
+    private Produto jsonProdToObj(String text){
+        Gson gson = new Gson();
+        return gson.fromJson(new String(text.getBytes()), Produto.class);
+    }
+
     private void addproduto_pedido(int id, String nome) {
         int quantidade = Integer.parseInt(edtQTD.getText());
         //adicionar produto
