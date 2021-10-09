@@ -5,13 +5,15 @@ import Services.ClienteService;
 import Services.PedidoService;
 import com.jfoenix.controls.*;
 import helpers.AlertDialogModel;
+import helpers.DefaultComponents;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
-import javafx.event.ActionEvent;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -160,6 +162,13 @@ public class novoPedidoController implements Initializable {
             change.setText(change.getText().toUpperCase());
             return change;
         }));
+        edtNome.setOnKeyPressed((e) -> {
+            switch (e.getCode()){
+                case ENTER:
+                    edtEndereco.requestFocus();
+                    break;
+            }
+        });
 
         setupEdtCliente();
         setupEdtFormaPag();
@@ -301,26 +310,77 @@ public class novoPedidoController implements Initializable {
         btnSalvar.setOnKeyPressed((e) -> {
             switch (e.getCode()){
                 case ENTER:
-                    verificarClienteExistente(edtNome.getText());
-                    pedidoAtual.setCliente(selected_Cliente);
+                    iniciarVerificacoes();
+                    break;
+            }
+        });
+        btnSalvar.setOnAction((e) -> {
+            //
+        });
+
+    }
+
+    private void iniciarVerificacoes() {
+        new Service<Cliente>(){
+            @Override
+            public void start() {
+                super.start();
+
+            }
+
+            @Override
+            protected Task<Cliente> createTask() {
+                return new Task<Cliente>() {
+                    @Override
+                    protected Cliente call() throws Exception {
+                        return verificarClienteExistente(new Cliente(null, edtNome.getText(),edtEndereco.getText(),cb_Bairro.getValue(),edtTel.getText(),""));
+                    }
+                };
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                System.out.println("Thread sucesso");
+                if(getValue() != null){
+                    pedidoAtual.setCliente(getValue());
                     try {
                         salvarPedido();
                     } catch (ParseException ex) {
                         ex.printStackTrace();
                     }
-                    break;
+                }else{
+                    JFXButton btnOK = DefaultComponents.defaultButton("SIM");
+                    btnOK.setOnAction((e) -> {
+                        Cliente cli = new Cliente(null,edtNome.getText(),edtEndereco.getText(),cb_Bairro.getValue(),edtTel.getText(),"");
+                        Cliente recup = criarCliente(cli);
+                        if(recup != null){
+                            pedidoAtual.setCliente(recup);
+                            try {
+                                salvarPedido();
+                            } catch (ParseException ex) {
+                                ex.printStackTrace();
+                            }
+                        }
+                    });
+                    JFXDialog dialog = AlertDialogModel.alertDialogAction("Cliente nao encontrado, deseja criar um novo?", stackPane, btnOK);
+                    dialog.show();
+                }
             }
-        });
-        btnSalvar.setOnAction((e) -> {
-            verificarClienteExistente(edtNome.getText());
-            pedidoAtual.setCliente(selected_Cliente);
-            try {
-                salvarPedido();
-            } catch (ParseException ex) {
-                ex.printStackTrace();
-            }
-        });
+        }.start();
 
+    }
+
+    private Cliente criarCliente(Cliente cli) {
+        Cliente cliente = null;
+        if(!(cli.getNome().equals("")) && !(cli.getBairro().getNome().equals("")) && !(cli.getEndereco().equals("")) && !(cli.getTelefone().equals(""))){
+            cliente = ClienteService.insert(cli);
+        }else{
+            JFXDialog dialog = AlertDialogModel.alertDialogErro("Preencha todos os campos", stackPane);
+            dialog.show();
+        }
+
+        return cliente;
     }
 
 
@@ -431,6 +491,19 @@ public class novoPedidoController implements Initializable {
     //Metodos Iniciais
 
     //Metodos de Negocios
+    private Cliente verificarClienteExistente(Cliente cli) {
+        Cliente cliente = null;
+        List<Cliente> cliList = ClienteService.getByNome(cli.getNome());
+        if(cliList.size() <=0){
+            System.out.println("Cliente Inexistente");
+            cliente = null;
+        }else{
+            System.out.println("Cliente existente");
+            cliente = cliList.get(0);
+        }
+        return cliente;
+    }
+
     private void pesquisarCliente(){
         filteredData = new FilteredList<>(clientes, b -> true);
         edtSearch.textProperty().addListener((observable, oldValue, newValue) ->{
@@ -552,56 +625,6 @@ public class novoPedidoController implements Initializable {
             JFXDialog dialog = AlertDialogModel.alertDialogErro("Houve um problema ao tentar incluir pedido", stackPane);
             dialog.show();
         }
-    }
-    private Cliente verificarClienteExistente(String nome) {
-        //verificar cliente existente
-        List<Cliente> clientes = ClienteService.getByNome(nome);
-        if(clientes.size() <= 0){
-            JFXButton buttonConfirmar = new JFXButton("OK");
-            JFXDialog dialog = AlertDialogModel.alertDialogAction("Cliente nao existente, deseja criar um novo?",stackPane, buttonConfirmar);
-            buttonConfirmar.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    System.out.println("Criando cliente");
-                    Cliente newCliente = new Cliente(null, edtNome.getText(),edtEndereco.getText(),cb_Bairro.getValue(),edtTel.getText(),null);
-                    criarCliente(newCliente);
-                    dialog.close();
-                }
-            });
-            dialog.show();
-        }else{
-            System.out.println("Cliente ja existe");
-            selected_Cliente = clientes.get(0);
-            return clientes.get(0);
-        }
-        return null;
-    }
-    private void criarCliente(Cliente cli){
-        SimpleDateFormat format = new SimpleDateFormat("dd-MM-YYYY");
-        Date data = new Date();
-        String data_cadastro = format.format(data);
-        if(cli.getNome().length() < 150 && cli.getEndereco().length() < 150 && cli.getTelefone().length() < 150){
-            if(!(cli.getNome().equals("") && !(cli.getEndereco().equals("")) && !(cli.getTelefone().equals("")))){
-                //inserir pedido
-                cli.setData_cadastro(data_cadastro);
-                Cliente newCli = ClienteService.insert(cli);
-                if(!(newCli.getNome().equals("") && newCli.getEndereco().equals("")
-                        && newCli.getTelefone().equals("") && newCli.getData_cadastro().equals(""))){
-                    System.out.println("Cliente Criado com Sucesso");
-                    recuperarClientes();
-                    selected_Cliente = newCli;
-                    alertDialogErro("Cliente Criado com sucesso!");
-                }else{
-                    System.out.println("Houve um erro");
-                    alertDialogErro("Houve um problema ao criar novo Cliente");
-                }
-            }else{
-                System.out.println("Preencha todos os Campos");
-            }
-        }else{
-            System.out.println("Os campos devem ter menos de 55 caracteres");
-        }
-
     }
     //Metodos de Negocios
 
