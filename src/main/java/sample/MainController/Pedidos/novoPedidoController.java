@@ -540,7 +540,7 @@ public class novoPedidoController implements Initializable {
         pedidoAtual.setTriagemHora(horario);
         pedidoAtual.setCheckoutHora(horario);
         pedidoAtual.setFinalizadoHora(horario);
-        pedidoAtual.setOperador(new Usuario(5L,"daniel",1));
+        pedidoAtual.setOperador(new Usuario(5L,"OPERADOR","",""));
         pedidoAtual.setStatus(1);
 
         if (checkBoxManual.isSelected() == false) {

@@ -5,6 +5,7 @@ import com.jfoenix.controls.JFXDialog;
 import com.jfoenix.controls.JFXPasswordField;
 import com.jfoenix.controls.JFXTextField;
 import helpers.AlertDialogModel;
+import helpers.HTTPRequest.Login;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -14,6 +15,7 @@ import javafx.scene.control.TextFormatter;
 import javafx.scene.image.Image;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
+import models.Usuario;
 
 import java.io.IOException;
 import java.net.URL;
@@ -66,7 +68,6 @@ public class LoginLogoutController implements Initializable {
 
         btnLogin.setOnAction((e) -> {
             authMethod();
-            //authMethod();
         });
         btnLogin.setOnKeyPressed((e) -> {
             switch (e.getCode()){
@@ -109,17 +110,23 @@ public class LoginLogoutController implements Initializable {
 
     private void authMethod() {
         //retirar exclamacoes quando implementar o metodo de login
-        if (!edtUsername.getText().isEmpty()) {
+        if (edtUsername.getText().isEmpty()) {
         JFXDialog dialog = AlertDialogModel.alertDialogErro("Preencha o campo de usuario", stackPane);
         dialog.show();
         }else{
-            if(!edtPassword.getText().isEmpty()){
+            if(edtPassword.getText().isEmpty()){
                 JFXDialog dialog = AlertDialogModel.alertDialogErro("Preencha o campo de senha", stackPane);
                 dialog.show();
             }else{
-                //realizar login//
-                //bypass para testes//
-                iniciarHome();
+                String username = edtUsername.getText().toUpperCase().trim();
+                String pass = edtPassword.getText().trim();
+                Usuario user = Login.login(new Usuario(null,username,pass,""));
+                if(user != null ){
+                    System.out.println("Bem vindo " + user.getUsername());
+                }else{
+                    System.out.println("Houve um problema");
+                }
+                //iniciarHome();
             }
         }
     }
