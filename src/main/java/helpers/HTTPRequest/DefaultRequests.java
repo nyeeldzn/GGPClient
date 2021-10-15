@@ -10,9 +10,14 @@ public class DefaultRequests {
 
     private static HttpURLConnection conn;
     private static String rootUrl;
+    private static String authHeader;
 
     public static void setConnect(String url) throws IOException {
         rootUrl = url;
+    }
+
+    public static void setAuthHeader(String header){
+        authHeader = header;
     }
 
     public static HttpURLConnection getConnection(){
@@ -31,6 +36,7 @@ public class DefaultRequests {
         try {
             conn.setRequestMethod("GET");
             conn.setRequestProperty("Accept", "application/json");
+            conn.setRequestProperty("Authorization", authHeader);
 
             if (conn.getResponseCode() != 200) {
                 System.out.println("Erro " + conn.getResponseCode() + " ao obter dados da URL " + rootUrl);
@@ -64,6 +70,7 @@ public class DefaultRequests {
 
             conn.setRequestMethod("GET");
             conn.setRequestProperty("Accept", "application/json");
+            conn.setRequestProperty("Authorization", authHeader);
 
             if (conn.getResponseCode() != 200) {
                 System.out.println("Erro " + conn.getResponseCode() + " ao obter dados da URL " + rootUrl);
@@ -97,6 +104,7 @@ public class DefaultRequests {
             conn.setDoOutput(true);
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("Authorization", authHeader);
 
             System.out.println(json);
             OutputStream os = conn.getOutputStream();
@@ -133,6 +141,7 @@ public class DefaultRequests {
             conn.setDoOutput(true);
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("Authorization", authHeader);
 
             System.out.println(json);
             OutputStream os = conn.getOutputStream();
@@ -175,6 +184,7 @@ public class DefaultRequests {
             conn.setRequestProperty(
                     "Content-Type", "application/x-www-form-urlencoded");
             conn.setRequestMethod("DELETE");
+            conn.setRequestProperty("Authorization", authHeader);
             conn.connect();
 
 
@@ -214,6 +224,8 @@ public class DefaultRequests {
             conn.setRequestProperty(
                     "Content-Type", "application/json");
             conn.setRequestMethod("PUT");
+            conn.setRequestProperty("Authorization", authHeader);
+
             OutputStreamWriter out = new OutputStreamWriter(
                     conn.getOutputStream());
             out.write(json);

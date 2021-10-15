@@ -18,7 +18,9 @@ public class Login {
 
     private static HttpURLConnection conn;
 
-    public static Usuario login (Usuario user){
+    public static Usuario usuario;
+
+    public static int login (Usuario user){
 
         //Gera String concatenada com os dados de Login e posteriormente faz encode em Base64
         String stringConcCredencial = user.getUsername() + ":" + user.getPass();
@@ -33,6 +35,7 @@ public class Login {
 
         String url = DefaultRequests.getRootUrl();
         String output = "";
+        Integer response = null;
 
         try {
             System.out.println("String Concatenada: " + stringConcCredencial + " String Base64: " + base64ConcCredential + "/n" + "String Header: " + autorizacaoHeader);
@@ -49,9 +52,12 @@ public class Login {
             os.write(userJson.getBytes());
             os.flush();
 
-            switch (conn.getResponseCode()){
+            response = conn.getResponseCode();
+            switch (response){
                 case 200:
                     System.out.println("Solicitacao feita com Sucesso!");
+                    usuario = gson.fromJson(new String(output.getBytes()), Usuario.class);
+                    DefaultRequests.setAuthHeader(autorizacaoHeader);
                     break;
                 case 502:
                     System.out.println("Houve um problema de conexao");
@@ -82,7 +88,9 @@ public class Login {
             e.printStackTrace();
         }
 
-        return gson.fromJson(new String(output.getBytes()), Usuario.class);
+
+
+        return response;
     }
 
 

@@ -120,13 +120,20 @@ public class LoginLogoutController implements Initializable {
             }else{
                 String username = edtUsername.getText().toUpperCase().trim();
                 String pass = edtPassword.getText().trim();
-                Usuario user = Login.login(new Usuario(null,username,pass,""));
-                if(user != null ){
-                    System.out.println("Bem vindo " + user.getUsername());
-                }else{
-                    System.out.println("Houve um problema");
+                switch (Login.login(new Usuario(null,username,pass,""))){
+                    case 200:
+                        iniciarHome();
+                        break;
+                    case 401:
+                        JFXDialog dialog1 = AlertDialogModel.alertDialogErro("Usuario e Senha Recusada!", stackPane);
+                        dialog1.show();
+                        break;
+                    default:
+                        JFXDialog dialog = AlertDialogModel.alertDialogErro("Houve um problema de conexao", stackPane);
+                        dialog.show();
+                        break;
                 }
-                //iniciarHome();
+
             }
         }
     }
