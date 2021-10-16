@@ -153,7 +153,7 @@ public class clientesController implements Initializable {
                       intentImport();
                   });
                   btnExcluir.setOnAction((e) -> {
-                      if(UserPrivilegiesVerify.permissaoVerBotao(user, 3) == true){
+                      if(UserPrivilegiesVerify.permissaoVerBotao(user, "admin") == true){
                           alertDialogExclusao();
                       }else{
                           JFXDialog dialog = AlertDialogModel.alertDialogErro("Você não tem permissão para isso.",stackPane);
@@ -203,7 +203,7 @@ public class clientesController implements Initializable {
                 }));
 
                   btnPrintClientes.setOnAction((e) ->{
-                      if(UserPrivilegiesVerify.permissaoVerBotao(user, 3) == true){
+                      if(UserPrivilegiesVerify.permissaoVerBotao(user, "admin") == true){
                           File file = DefaultComponents.fileChooserSave(stackPane, "DOCUMENTO EXCEL (*.XLS)", "*.xls");
                           gerarDocumentoXLS(file);
                       }

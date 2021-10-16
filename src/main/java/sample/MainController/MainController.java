@@ -6,12 +6,14 @@ import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDialog;
 import com.jfoenix.controls.JFXHamburger;
 import helpers.*;
+import helpers.HTTPRequest.Login;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -155,11 +157,8 @@ public class MainController implements Initializable {
 
     String dataInicial;
     String dataFinal;
-    String query = null;
     Connection connection = null;
     PreparedStatement preparedStatement = null;
-    ResultSet resultSet = null;
-    FilteredList<OrdemPedido> filteredData;
     Usuario user = null;
 
     ObservableList<OrdemPedido> listaPedidos = FXCollections.observableArrayList();
@@ -174,19 +173,56 @@ public class MainController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        recuperarPedidos();
-        setupComponentes();
         recuperarUsuario();
+        buscaDeProdutos();
+
+        setupComponentes();
     }
 
+    private void buscaDeProdutos() {
+            JFXDialog loading = LoadingPane.alertDialogErro(stackPane);
+            setupTables();
+            new Service<Integer>(){
+                @Override
+                public void start() {
+                    super.start();
+                    loading.show();
+                }
+
+                @Override
+                protected Task<Integer> createTask() {
+                    return new Task<Integer>() {
+                        @Override
+                        protected Integer call() throws Exception {
+                            recuperarPedidos();
+                            return 0;
+                        }
+
+                        private void recuperarPedidos() {
+                            listaPedidos = FXCollections.observableArrayList(PedidoService.findAllByStatus(1));
+                            listaPedidosTriagem = FXCollections.observableArrayList(PedidoService.findAllByMoreStatus(Arrays.asList(2,3,4)));
+                            listaPedidosFinalizado = FXCollections.observableArrayList(PedidoService.findAllByStatus(5));
+                        }
+                    };
+                }
+
+                @Override
+                protected void succeeded() {
+                    super.succeeded();
+                    System.out.println("Thread sucesso");
+                    refreshTable();
+                    loading.close();
+                }
+            }.start();
+    }
 
 
     //Metodos Iniciais
     private void recuperarUsuario() {
-        //recuperar usuario logado
-       //System.out.println("usuario logado: " + user.getUsername());
+        user = Login.getUser();
+        System.out.println("Usuario logado: " + user.getUsername());
     }
-    private void recuperarPedidos() {
+    private void setupTables() {
         //receber conexao
 
 
@@ -208,7 +244,6 @@ public class MainController implements Initializable {
         dataColFinalizado.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().dateToTimeString(c.getValue().getFinalizadoHora())));
         statusColFinalizado.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().statusToString()));
 
-        refreshTable();
     }
     private void setupComponentes(){
         stackPane.setOnMousePressed(pressEvent -> {
@@ -225,10 +260,10 @@ public class MainController implements Initializable {
             stage.close();
         });
         btnRefresh.setOnAction((e) -> {
-            refreshTable();
+            buscaDeProdutos();
         });
         btnNovoPedido.setOnAction((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, 2) == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "user") == true){
                 intentnovoPedido();
             }else{
                 JFXDialog dialog = AlertDialogModel.alertDialogErro("Você não tem permissão para isso.",stackPane);
@@ -236,7 +271,7 @@ public class MainController implements Initializable {
             }
         });
         btnDetalhesPedido.setOnAction((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, 1) == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "visitante") == true){
                 if(selectedIndex != null && !(selectedIndex.isEmpty())){
                     intentDados(selectedIndex, selectedTable);
                 }else{
@@ -250,7 +285,7 @@ public class MainController implements Initializable {
 
         });
         btnConfig.setOnMouseClicked((e) ->{
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, 1) == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "visitante") == true){
                 if(leftPane == false){
                     borderPane.setRight(anchorPane());
                     leftPane = true;
@@ -335,7 +370,7 @@ public class MainController implements Initializable {
 
         JFXButton btnProdutos = buttonIcon("PRODUTOS", "GIFT", larguraPadrao);
         btnProdutos.setOnAction((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, 2) == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "user") == true){
                 fecharAbrirMenu();
                 openProdutosController();
             }else{
@@ -347,7 +382,7 @@ public class MainController implements Initializable {
 
         JFXButton btnPedidos = buttonIcon("PEDIDOS", "CART_PLUS", larguraPadrao);
         btnPedidos.setOnAction((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, 1) == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "visitante") == true){
                 fecharAbrirMenu();
                 openPedidosController();
             }else{
@@ -358,7 +393,7 @@ public class MainController implements Initializable {
 
         JFXButton btnClientes = buttonIcon("CLIENTES", "USER", larguraPadrao);
         btnClientes.setOnAction((e) ->{
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, 1) == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "visitante") == true){
                 fecharAbrirMenu();
                 openClientesController();
             }else{
@@ -369,7 +404,7 @@ public class MainController implements Initializable {
 
         JFXButton btnDashboard = buttonIcon("DASHBOARD", "CLIPBOARD", larguraPadrao);
         btnDashboard.setOnAction((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, 3) == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "admin") == true){
                 fecharAbrirMenu();
                 mainCenter.setVisible(false);
                 configDashBoard(25);
@@ -384,7 +419,7 @@ public class MainController implements Initializable {
 
         JFXButton btnFuncionarios = buttonIcon("FUNCIONARIO", "USER", larguraPadrao);
         btnFuncionarios.setOnAction((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, 3) == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "admin") == true){
                 intentFuncionarios();
             }else{
                 JFXDialog dialog = AlertDialogModel.alertDialogErro("Você não tem permissão para isso.",stackPane);
@@ -394,7 +429,7 @@ public class MainController implements Initializable {
 
         JFXButton btnRupturas = buttonIcon("LISTA DE RUPTURA", "LIST", larguraPadrao);
         btnRupturas.setOnAction((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, 2) == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "user") == true){
                 intentListaRupturas();
             }else{
                 JFXDialog dialog = AlertDialogModel.alertDialogErro("Você não tem permissão para isso.",stackPane);
@@ -765,21 +800,12 @@ public class MainController implements Initializable {
     //Metodos de Controle
     @FXML
     private void refreshTable(){
-        listaPedidos.clear();
-        listaPedidosTriagem.clear();
-        listaPedidosFinalizado.clear();
-
-        listaPedidos = FXCollections.observableArrayList(PedidoService.findAllByStatus(1));
-        listaPedidosTriagem = FXCollections.observableArrayList(PedidoService.findAllByMoreStatus(Arrays.asList(2,3,4)));
-        listaPedidosFinalizado = FXCollections.observableArrayList(PedidoService.findAllByStatus(5));
-
         tablePedido.setItems(listaPedidos);
         tablePedido.getSortOrder().add(idCol);
         tablePedidoTriagem.setItems(listaPedidosTriagem);
         tablePedidoTriagem.getSortOrder().add(idColTriagem);
         tablePedidoFinalizado.setItems(listaPedidosFinalizado);
         tablePedidoFinalizado.getSortOrder().add(idColFinalizado);
-
     }
     private void intentnovoPedido() {
         try {
@@ -792,7 +818,7 @@ public class MainController implements Initializable {
             stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
                 @Override
                 public void handle(WindowEvent event) {
-                    refreshTable();
+                    buscaDeProdutos();
                     System.out.println("Janela fechada");
                 }
             });
@@ -811,7 +837,7 @@ public class MainController implements Initializable {
             stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
                 @Override
                 public void handle(WindowEvent event) {
-                    refreshTable();
+                    buscaDeProdutos();
                     System.out.println("Janela fechada");
                 }
             });
@@ -847,7 +873,7 @@ public class MainController implements Initializable {
             stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
                 @Override
                 public void handle(WindowEvent event) {
-                    refreshTable();
+                    buscaDeProdutos();
                 }
             });
         } catch (IOException exception){

@@ -6,6 +6,9 @@ import com.jfoenix.controls.JFXPasswordField;
 import com.jfoenix.controls.JFXTextField;
 import helpers.AlertDialogModel;
 import helpers.HTTPRequest.Login;
+import helpers.LoadingPane;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -67,12 +70,12 @@ public class LoginLogoutController implements Initializable {
         });
 
         btnLogin.setOnAction((e) -> {
-            authMethod();
+            threadLogin();
         });
         btnLogin.setOnKeyPressed((e) -> {
             switch (e.getCode()){
                 case ENTER:
-                    authMethod();
+                    threadLogin();
                     break;
             }
         });
@@ -95,6 +98,50 @@ public class LoginLogoutController implements Initializable {
 
     }
 
+
+    private void threadLogin() {
+        JFXDialog loading = LoadingPane.alertDialogErro(stackPane);
+        new Service<Integer>(){
+            @Override
+            public void start() {
+                super.start();
+                loading.show();
+            }
+
+            @Override
+            protected Task<Integer> createTask() {
+                return new Task<Integer>() {
+                    @Override
+                    protected Integer call() throws Exception {
+                        Integer state = authMethod();
+                        return state;
+                    }
+                };
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                System.out.println("Thread sucesso");
+                loading.close();
+                switch (getValue()){
+                    case 200:
+                        iniciarHome();
+                        break;
+                    case 401:
+                        JFXDialog dialog1 = AlertDialogModel.alertDialogErro("Usuario ou Senha Recusados!", stackPane);
+                        dialog1.show();
+                        break;
+                    default:
+                        JFXDialog dialog = AlertDialogModel.alertDialogErro("Houve um Problema de Conexao", stackPane);
+                        dialog.show();
+                        break;
+                }
+                }
+        }.start();
+
+    }
+
     private void setupStackPane() {
         // new Image(url)
         Image image = new Image(getClass().getResource("/loginbg.jpeg").toExternalForm());
@@ -108,8 +155,8 @@ public class LoginLogoutController implements Initializable {
     }
 
 
-    private void authMethod() {
-        //retirar exclamacoes quando implementar o metodo de login
+    private int authMethod() {
+        Integer state = null;
         if (edtUsername.getText().isEmpty()) {
         JFXDialog dialog = AlertDialogModel.alertDialogErro("Preencha o campo de usuario", stackPane);
         dialog.show();
@@ -120,22 +167,10 @@ public class LoginLogoutController implements Initializable {
             }else{
                 String username = edtUsername.getText().toUpperCase().trim();
                 String pass = edtPassword.getText().trim();
-                switch (Login.login(new Usuario(null,username,pass,""))){
-                    case 200:
-                        iniciarHome();
-                        break;
-                    case 401:
-                        JFXDialog dialog1 = AlertDialogModel.alertDialogErro("Usuario e Senha Recusada!", stackPane);
-                        dialog1.show();
-                        break;
-                    default:
-                        JFXDialog dialog = AlertDialogModel.alertDialogErro("Houve um problema de conexao", stackPane);
-                        dialog.show();
-                        break;
-                }
-
+                state = Login.login(new Usuario(null,username,pass,""));
             }
         }
+        return state;
     }
 
     private void iniciarHome() {

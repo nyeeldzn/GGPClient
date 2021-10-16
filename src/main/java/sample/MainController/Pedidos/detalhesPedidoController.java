@@ -232,7 +232,7 @@ public class  detalhesPedidoController implements Initializable {
             }
         });
         btnADD.setOnKeyPressed((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, 2) == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "operador") == true){
                 switch (e.getCode()){
                     case ENTER:
                         adicionarProdutoLista();
@@ -261,7 +261,7 @@ public class  detalhesPedidoController implements Initializable {
 
         }
         btnAlterarPolimorf.setOnAction((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, 1) == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "visitante") == true){
                 if(table_index != 3){
                     alterarStatusPedido();
                 }else{
@@ -274,7 +274,7 @@ public class  detalhesPedidoController implements Initializable {
             }
         });
         btnADD.setOnAction((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, 2) == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "operador") == true){
                 if(table_index != 3){
                     adicionarProdutoLista();
                 }else{
@@ -293,7 +293,7 @@ public class  detalhesPedidoController implements Initializable {
         });
         btnAtualizarLista.setOnAction((e) -> recuperarProdutosPedido());
         btnImprimir.setOnAction((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, 1) == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "visitante") == true){
                 File file = DefaultComponents.fileChooserSave(stackPane, "PDF files (*.pdf)", "*.pdf");
                 if(file != null){
                     criarPDF(file);
@@ -334,7 +334,7 @@ public class  detalhesPedidoController implements Initializable {
         });
 
         tableProdutos.setOnKeyPressed((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, 2) == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "operador") == true){
                 switch (e.getCode()) {
                     case DELETE:
                         if(isSelected == true){

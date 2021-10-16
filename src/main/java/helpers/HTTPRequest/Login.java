@@ -18,7 +18,7 @@ public class Login {
 
     private static HttpURLConnection conn;
 
-    public static Usuario usuario;
+    private static Usuario usuario;
 
     public static int login (Usuario user){
 
@@ -56,7 +56,6 @@ public class Login {
             switch (response){
                 case 200:
                     System.out.println("Solicitacao feita com Sucesso!");
-                    usuario = gson.fromJson(new String(output.getBytes()), Usuario.class);
                     DefaultRequests.setAuthHeader(autorizacaoHeader);
                     break;
                 case 502:
@@ -78,6 +77,8 @@ public class Login {
                 output += line;
             }
 
+            usuario = gson.fromJson(new String(output.getBytes()), Usuario.class);
+
             conn.disconnect();
 
         } catch (ProtocolException e) {
@@ -91,6 +92,10 @@ public class Login {
 
 
         return response;
+    }
+
+    public static Usuario getUser(){
+        return usuario;
     }
 
 
