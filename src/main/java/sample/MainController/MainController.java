@@ -180,7 +180,7 @@ public class MainController implements Initializable {
     }
 
     private void buscaDeProdutos() {
-            JFXDialog loading = LoadingPane.alertDialogErro(stackPane);
+            JFXDialog loading = LoadingPane.SimpleLoading(stackPane);
             setupTables();
             new Service<Integer>(){
                 @Override

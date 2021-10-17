@@ -6,6 +6,7 @@ import Services.PedidoService;
 import com.jfoenix.controls.*;
 import helpers.AlertDialogModel;
 import helpers.DefaultComponents;
+import helpers.LoadingPane;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -136,24 +137,56 @@ public class novoPedidoController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         //recuperar usuario logado
 
-        recuperarClientes();
-        recuperarBairros();
+        buscarDados();
 
         setupComponentes();
     }
 
+    private void buscarDados() {
+        JFXDialog loading = LoadingPane.SimpleLoading(stackPane);
+
+        new Service<Integer>(){
+
+            @Override
+            public void start() {
+                super.start();
+                loading.show();
+            }
+
+            @Override
+            protected Task<Integer> createTask() {
+                return new Task<Integer>() {
+                    @Override
+                    protected Integer call() throws Exception {
+                        recuperarClientes();
+                        recuperarBairros();
+                        return null;
+                    }
+                };
+            }
+
+
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                refreshBairrosComboBox();
+                loading.close();
+            }
+        }.start();
+    }
 
 
     //Metodos Iniciais
     private void recuperarClientes() {
-        clientes.clear();
         clientes = FXCollections.observableArrayList(ClienteService.findAll());
-        //recuperar todos os clientes
     }
 
     private void recuperarBairros() {
-        bairros.clear();
         bairros = FXCollections.observableArrayList(BairroService.findAll());
+    }
+
+    private void refreshBairrosComboBox(){
         cb_Bairro.getItems().addAll(bairros);
     }
 

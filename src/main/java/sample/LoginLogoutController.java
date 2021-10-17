@@ -100,7 +100,7 @@ public class LoginLogoutController implements Initializable {
 
 
     private void threadLogin() {
-        JFXDialog loading = LoadingPane.alertDialogErro(stackPane);
+        JFXDialog loading = LoadingPane.SimpleLoading(stackPane);
         new Service<Integer>(){
             @Override
             public void start() {
