@@ -9,16 +9,16 @@ import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.jfoenix.controls.*;
-import helpers.AlertDialogModel;
-import helpers.DefaultComponents;
-import helpers.UserPrivilegiesVerify;
-import helpers.intentData;
+import helpers.*;
+import helpers.HTTPRequest.Login;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -133,23 +133,49 @@ public class  detalhesPedidoController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        recuperarUsuario();
-        try {
-            recuperarIntentProdUid();
-        } catch (SQLException exception) {
-            exception.printStackTrace();
-        }
 
-
-        recuperarProdutosPedido();
-
+        buscaDados();
 
         setupComponentes();
 
     }
 
+    private void buscaDados() {
+        JFXDialog loading = LoadingPane.SimpleLoading(stackPane);
+
+        new Service<Integer>(){
+
+            @Override
+            public void start() {
+                super.start();
+                loading.show();
+            }
+
+            @Override
+            protected Task<Integer> createTask() {
+                return new Task<Integer>() {
+                    @Override
+                    protected Integer call() throws Exception {
+                        recuperarUsuario();
+                        recuperarIntentProdUid();
+                        recuperarProdutosPedido();
+                        return null;
+                    }
+                };
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                loading.close();
+            }
+        }.start();
+
+
+    }
+
     private void recuperarUsuario() {
-        //recuperar usuario
+        user = Login.getUser();
     }
 
     private void setupEdt() {
@@ -448,7 +474,7 @@ public class  detalhesPedidoController implements Initializable {
         document.close();
     }
 
-    private void recuperarIntentProdUid() throws SQLException {
+    private void recuperarIntentProdUid(){
         String id;
         int table;
         intentData intent = intentData.getINSTANCE();

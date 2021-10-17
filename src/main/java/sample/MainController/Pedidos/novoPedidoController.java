@@ -165,8 +165,6 @@ public class novoPedidoController implements Initializable {
                 };
             }
 
-
-
             @Override
             protected void succeeded() {
                 super.succeeded();
