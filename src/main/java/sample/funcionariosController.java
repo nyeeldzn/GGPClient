@@ -1,11 +1,15 @@
 package sample;
 
+import Services.UsuarioService;
 import com.jfoenix.controls.*;
 import helpers.AlertDialogModel;
+import helpers.LoadingPane;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
@@ -24,12 +28,8 @@ import javafx.scene.text.Text;
 import models.OrdemPedido;
 import models.Usuario;
 
-import java.io.IOException;
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class funcionariosController implements Initializable {
@@ -63,11 +63,6 @@ public class funcionariosController implements Initializable {
 
     ObservableList<Usuario> listaUsuarios = FXCollections.observableArrayList();
 
-
-    Connection connection = null;
-    PreparedStatement preparedStatement = null;
-    ResultSet resultSet = null;
-    String query = null;
     Usuario modelUsuario;
     boolean selectedUsuario = false;
     JFXDialog dialog;
@@ -75,35 +70,55 @@ public class funcionariosController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         prepararTableView();
+        recuperarDados();
         setupComponents();
+    }
+
+    private void recuperarDados() {
+        new Service<List<Usuario>>(){
+            JFXDialog loading = LoadingPane.SimpleLoading(stackPane);
+            @Override
+            public void start() {
+                loading.show();
+                super.start();
+            }
+
+            @Override
+            protected Task<List<Usuario>> createTask() {
+                return new Task<List<Usuario>>() {
+                    @Override
+                    protected List<Usuario> call() throws Exception {
+                        listaUsuarios = FXCollections.observableArrayList(UsuarioService.findAll());
+                        return listaUsuarios;
+                    }
+                };
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                tableUsuario.setItems(listaUsuarios);
+                loading.close();
+            }
+
+        }.start();
+
     }
 
     //metodos iniciais
     private void setupComponents() {
-        btnNovo.setOnAction((e)-> {
-                    try {
-                        alertDialogUsuarioNovo();
-                    } catch (IOException exception) {
-                        exception.printStackTrace();
-                    }
-                });
+        btnNovo.setOnAction(e-> alertDialogUsuarioNovo());
+
         btnEditar.setOnAction((e) -> {
             if (selectedUsuario == true && modelUsuario != null) {
-                try {
-                    alertDialogClientes();
-                } catch (IOException exception) {
-                    exception.printStackTrace();
-                }
+                alertDialogClientes();
             }else{
                 JFXDialog dialog = AlertDialogModel.alertDialogErro("Selecione um Usuario", stackPane);
                 dialog.show();
             }
         });
     }
-    private void recuperarFuncionarios() {
-        //recuperar todos os usuarios
-        //tableUsuario.setItems(listaUsuarios);
-    }
+
     private void prepararTableView() {
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
         nomeCol.setCellValueFactory(new PropertyValueFactory<>("username"));
@@ -119,20 +134,16 @@ public class funcionariosController implements Initializable {
                 }
             }
         });
-        recuperarFuncionarios();
     }
     //metodos iniciais
 
     //metodos de negocios
-    private boolean insertUsuario(String query, String value, int id) throws SQLException {
-        //inserir usuario
-        return false;
-    }
+
     //metodos de negocios
 
 
     //objetos
-    private void alertDialogUsuarioNovo() throws IOException {
+    private void alertDialogUsuarioNovo(){
         JFXDialogLayout dialogLayout = new JFXDialogLayout();
         dialog = new JFXDialog(stackPane, dialogLayout, JFXDialog.DialogTransition.TOP);
         dialogLayout.setBody(
@@ -153,7 +164,7 @@ public class funcionariosController implements Initializable {
 
         JFXComboBox<String> cbPermissoes = new JFXComboBox();
         ObservableList<String> listaPermissoes = FXCollections.observableArrayList(
-                "Visitante","Entregador","Operador","Admin"
+                "Visitante","Operador","Admin"
         );
         cbPermissoes.setItems(listaPermissoes);
         cbPermissoes.getSelectionModel().select(0);
@@ -197,14 +208,41 @@ public class funcionariosController implements Initializable {
 
         vboxPrincipal.getChildren().addAll(row1, row2, row3);
 
-        btnSalvar.setOnAction((e) -> {
+        btnSalvar.setOnAction((e) ->{
             if(!(edtNome.getText().equals("")) && !(edtSenha.getText().equals(""))){
-                String nome = edtNome.getText().trim();
-                int permissions = cbPermissoes.getSelectionModel().getSelectedIndex();
-                String senha = edtSenha.getText().trim();
-                Usuario newUser = new Usuario();
-                //inserir usuario
-                //caso ok retornar refresh table e dialog.close();
+                    new Service<Usuario>(){
+                        JFXDialog loading = LoadingPane.SimpleLoading(stackPane);
+
+                        @Override
+                        public void start() {
+                            loading.show();
+                            super.start();
+                        }
+
+                        @Override
+                        protected Task<Usuario> createTask() {
+                            return new Task<Usuario>() {
+                                @Override
+                                protected Usuario call() throws Exception {
+                                    String username = edtNome.getText().toUpperCase().trim();
+                                    String pass = edtSenha.getText().toUpperCase().trim();
+                                    String permissions = cbPermissoes.getSelectionModel().getSelectedItem();
+
+                                    Usuario newUsr = UsuarioService.insert(new Usuario(null, username, pass, permissions)) ;
+                                    return newUsr;
+                                }
+                            };
+                        }
+
+                        @Override
+                        protected void succeeded() {
+                            super.succeeded();
+                            loading.close();
+                            dialog.close();
+                            refreshTable();
+                        }
+
+                    }.start();
             }else{
                 JFXDialog dialog = AlertDialogModel.alertDialogErro("Preencha todos os campos", stackPane);
                 dialog.show();
@@ -216,7 +254,7 @@ public class funcionariosController implements Initializable {
         pane.getChildren().add(vboxPrincipal);
         return pane;
     }
-    private void alertDialogClientes() throws IOException {
+    private void alertDialogClientes(){
         JFXDialogLayout dialogLayout = new JFXDialogLayout();
         dialog = new JFXDialog(stackPane, dialogLayout, JFXDialog.DialogTransition.TOP);
         dialogLayout.setBody(
@@ -233,7 +271,7 @@ public class funcionariosController implements Initializable {
 
         JFXComboBox<String> cbPermissoes = new JFXComboBox();
         ObservableList<String> listaPermissoes = FXCollections.observableArrayList(
-                "Visitante","Entregador","Operador","Admin"
+                "Visitante","Operador","Admin"
         );
         cbPermissoes.setItems(listaPermissoes);
         cbPermissoes.getSelectionModel().select(modelUsuario.getPriv());
@@ -338,7 +376,7 @@ public class funcionariosController implements Initializable {
     //metodos de controle
     private void refreshTable() {
         listaUsuarios.clear();
-        recuperarFuncionarios();
+        recuperarDados();
     }
     //metodos de controle
 

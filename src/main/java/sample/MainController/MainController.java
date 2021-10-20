@@ -263,7 +263,7 @@ public class MainController implements Initializable {
             buscaDeProdutos();
         });
         btnNovoPedido.setOnAction((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, "user") == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "Operador") == true){
                 intentnovoPedido();
             }else{
                 JFXDialog dialog = AlertDialogModel.alertDialogErro("Você não tem permissão para isso.",stackPane);
@@ -271,7 +271,7 @@ public class MainController implements Initializable {
             }
         });
         btnDetalhesPedido.setOnAction((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, "visitante") == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "Visitante") == true){
                 if(selectedIndex != null && !(selectedIndex.isEmpty())){
                     intentDados(selectedIndex, selectedTable);
                 }else{
@@ -285,7 +285,7 @@ public class MainController implements Initializable {
 
         });
         btnConfig.setOnMouseClicked((e) ->{
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, "visitante") == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "Visitante") == true){
                 if(leftPane == false){
                     borderPane.setRight(anchorPane());
                     leftPane = true;
@@ -370,7 +370,7 @@ public class MainController implements Initializable {
 
         JFXButton btnProdutos = buttonIcon("PRODUTOS", "GIFT", larguraPadrao);
         btnProdutos.setOnAction((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, "user") == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "Operador") == true){
                 fecharAbrirMenu();
                 openProdutosController();
             }else{
@@ -382,7 +382,7 @@ public class MainController implements Initializable {
 
         JFXButton btnPedidos = buttonIcon("PEDIDOS", "CART_PLUS", larguraPadrao);
         btnPedidos.setOnAction((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, "visitante") == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "Visitante") == true){
                 fecharAbrirMenu();
                 openPedidosController();
             }else{
@@ -393,7 +393,7 @@ public class MainController implements Initializable {
 
         JFXButton btnClientes = buttonIcon("CLIENTES", "USER", larguraPadrao);
         btnClientes.setOnAction((e) ->{
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, "visitante") == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "Visitante") == true){
                 fecharAbrirMenu();
                 openClientesController();
             }else{
@@ -404,7 +404,7 @@ public class MainController implements Initializable {
 
         JFXButton btnDashboard = buttonIcon("DASHBOARD", "CLIPBOARD", larguraPadrao);
         btnDashboard.setOnAction((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, "admin") == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "Admin") == true){
                 fecharAbrirMenu();
                 mainCenter.setVisible(false);
                 configDashBoard(25);
@@ -419,7 +419,7 @@ public class MainController implements Initializable {
 
         JFXButton btnFuncionarios = buttonIcon("FUNCIONARIO", "USER", larguraPadrao);
         btnFuncionarios.setOnAction((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, "admin") == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "Admin") == true){
                 intentFuncionarios();
             }else{
                 JFXDialog dialog = AlertDialogModel.alertDialogErro("Você não tem permissão para isso.",stackPane);
@@ -429,7 +429,7 @@ public class MainController implements Initializable {
 
         JFXButton btnRupturas = buttonIcon("LISTA DE RUPTURA", "LIST", larguraPadrao);
         btnRupturas.setOnAction((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, "user") == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "Operador") == true){
                 intentListaRupturas();
             }else{
                 JFXDialog dialog = AlertDialogModel.alertDialogErro("Você não tem permissão para isso.",stackPane);

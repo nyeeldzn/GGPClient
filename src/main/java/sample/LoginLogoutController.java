@@ -166,7 +166,7 @@ public class LoginLogoutController implements Initializable {
                 dialog.show();
             }else{
                 String username = edtUsername.getText().toUpperCase().trim();
-                String pass = edtPassword.getText().trim();
+                String pass = edtPassword.getText().toUpperCase().trim();
                 state = Login.login(new Usuario(null,username,pass,""));
             }
         }

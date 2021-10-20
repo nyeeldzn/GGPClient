@@ -12,30 +12,32 @@ public class UserPrivilegiesVerify {
 
     public static boolean permissaoVerBotao(Usuario user, String buttonPriv){
         boolean state = false;
+        buttonPriv = buttonPriv.toUpperCase().trim();
+        user.setPriv(user.getPriv().toUpperCase().trim());
 
-        switch (buttonPriv){
-            case "visitante":
-                if(user.getPriv().equals("admin")){
+        switch (buttonPriv.toUpperCase()){
+            case "VISITANTE":
+                if(user.getPriv().equals("ADMIN")){
                     state = true;
-                }else if(user.getPriv().equals("user")){
+                }else if(user.getPriv().equals("OPERADOR")){
                     state = true;
-                }else if(user.getPriv().equals("visitante")){
+                }else if(user.getPriv().equals("VISITANTE")){
                     state = true;
                 } else{
                     state = false;
                 }
                 break;
-            case "user":
-                if(user.getPriv().equals("admin")){
+            case "OPERADOR":
+                if(user.getPriv().equals("ADMIN")){
                     state = true;
-                }else if(user.getPriv().equals("user")){
+                }else if(user.getPriv().equals("OPERADOR")){
                     state = true;
                 }else{
                     state = false;
                 }
                 break;
-            case "admin":
-                if(user.getPriv().equals("admin")){
+            case "ADMIN":
+                if(user.getPriv().equals("ADMIN")){
                     state = true;
                 }else{
                     state = false;
