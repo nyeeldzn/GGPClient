@@ -6,6 +6,7 @@ import Services.PedidoService;
 import com.jfoenix.controls.*;
 import helpers.AlertDialogModel;
 import helpers.DefaultComponents;
+import helpers.HTTPRequest.Login;
 import helpers.LoadingPane;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -23,6 +24,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -116,6 +118,7 @@ public class novoPedidoController implements Initializable {
     JFXDialog dialog;
     BorderPane border;
     TableView tableView;
+    Usuario user;
 
     @FXML
     private JFXButton btnCancelar;
@@ -135,11 +138,7 @@ public class novoPedidoController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        //recuperar usuario logado
-
         buscarDados();
-
-        setupComponentes();
     }
 
     private void buscarDados() {
@@ -158,6 +157,7 @@ public class novoPedidoController implements Initializable {
                 return new Task<Integer>() {
                     @Override
                     protected Integer call() throws Exception {
+                        recupararUsuario();
                         recuperarClientes();
                         recuperarBairros();
                         return null;
@@ -169,6 +169,7 @@ public class novoPedidoController implements Initializable {
             protected void succeeded() {
                 super.succeeded();
                 refreshBairrosComboBox();
+                setupComponentes();
                 loading.close();
             }
         }.start();
@@ -176,6 +177,10 @@ public class novoPedidoController implements Initializable {
 
 
     //Metodos Iniciais
+    private void recupararUsuario() {
+        user = Login.getUser();
+    }
+
     private void recuperarClientes() {
         clientes = FXCollections.observableArrayList(ClienteService.findAll());
     }
@@ -215,7 +220,7 @@ public class novoPedidoController implements Initializable {
         edtEndereco.setOnKeyPressed((e) -> {
             switch (e.getCode()){
                 case ENTER:
-                    edtTel.requestFocus();
+                    cb_Bairro.requestFocus();
                     break;
             }
         });
@@ -223,6 +228,12 @@ public class novoPedidoController implements Initializable {
             change.setText(change.getText().toUpperCase());
             return change;
         }));
+
+        cb_Bairro.setOnKeyPressed(e -> {
+            if(e.getCode() == KeyCode.ENTER){
+                edtTel.requestFocus();
+            }
+        });
         edtTel.setOnKeyPressed((e) -> {
             switch (e.getCode()){
                 case ENTER:
@@ -339,24 +350,23 @@ public class novoPedidoController implements Initializable {
         btnCancelar.setOnAction((e) -> fecharJanela());
 
         btnSalvar.setOnKeyPressed((e) -> {
-            switch (e.getCode()){
-                case ENTER:
-                    iniciarVerificacoes();
-                    break;
+            if(e.getCode() == KeyCode.ENTER){
+                iniciarVerificacoes();
             }
         });
         btnSalvar.setOnAction((e) -> {
-            //
+            iniciarVerificacoes();
         });
 
     }
 
     private void iniciarVerificacoes() {
+        JFXDialog loading = LoadingPane.SimpleLoading(stackPane);
         new Service<Cliente>(){
             @Override
             public void start() {
                 super.start();
-
+                loading.show();
             }
 
             @Override
@@ -373,13 +383,10 @@ public class novoPedidoController implements Initializable {
             protected void succeeded() {
                 super.succeeded();
                 System.out.println("Thread sucesso");
+                loading.close();
                 if(getValue() != null){
                     pedidoAtual.setCliente(getValue());
-                    try {
                         salvarPedido();
-                    } catch (ParseException ex) {
-                        ex.printStackTrace();
-                    }
                 }else{
                     JFXButton btnOK = DefaultComponents.defaultButton("SIM");
                     btnOK.setOnAction((e) -> {
@@ -387,11 +394,7 @@ public class novoPedidoController implements Initializable {
                         Cliente recup = criarCliente(cli);
                         if(recup != null){
                             pedidoAtual.setCliente(recup);
-                            try {
                                 salvarPedido();
-                            } catch (ParseException ex) {
-                                ex.printStackTrace();
-                            }
                         }
                     });
                     JFXDialog dialog = AlertDialogModel.alertDialogAction("Cliente nao encontrado, deseja criar um novo?", stackPane, btnOK);
@@ -559,49 +562,106 @@ public class novoPedidoController implements Initializable {
             tableView.setItems(sortedData);
         });
     }
-    private void salvarPedido() throws ParseException {
-        Date date = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
-        Date horario = new Date(System.currentTimeMillis());
-
-        pedidoAtual.setForma_pagamento(edtFormaPagamento.getText());
-        pedidoAtual.setFonte_pedido(edtFonte.getText());
-        pedidoAtual.setEntradaDate(sdf.parse(sdf.format(date)));
-        pedidoAtual.setEntradaHora(horario);
-        pedidoAtual.setTriagemHora(horario);
-        pedidoAtual.setCheckoutHora(horario);
-        pedidoAtual.setFinalizadoHora(horario);
-        pedidoAtual.setOperador(new Usuario(5L,"OPERADOR","",""));
-        pedidoAtual.setStatus(1);
-
-        if (checkBoxManual.isSelected() == false) {
-            if(pedidoAtual.getForma_pagamento().isEmpty() ||  pedidoAtual.getFonte_pedido().isEmpty()){
-                alertDialogErro("Preencha todos os Campos!");
-            }else{
-                verificarCheckboxManual();
+    private void salvarPedido(){
+        JFXDialog loading = LoadingPane.SimpleLoading(stackPane);
+        new Service<OrdemPedido>(){
+            @Override
+            public void start() {
+                loading.show();
+                preparePedido();
+                super.start();
             }
-        }else{
-            if(pedidoAtual.getForma_pagamento().isEmpty() ||  pedidoAtual.getFonte_pedido().isEmpty()
-            || timePickerEntrada.getPromptText().isEmpty()|| timePickerTriagem.getPromptText().isEmpty() || timePickerCheckout.getPromptText().isEmpty()
-            || timePickerSaida.getPromptText().isEmpty() || timePickerFinalizado.getPromptText().isEmpty() || edtCaixa.getText().isEmpty()
-                    || edtEntregador.getText().isEmpty()){
-                alertDialogErro("Preencha todos os Campos!");
-            }else if((selected_Cliente.getNome().length() > 155 || selected_Cliente.getEndereco().length() > 500 || selected_Cliente.getTelefone().length() > 55 )){
-                alertDialogErro("Os campos excedem o tamanho de maximo de caracteres.");
-            }else{
-                verificarCheckboxManual();
-            }
-        }
 
+            private void preparePedido() {
+                Date date = new Date();
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
+                Date horario = new Date(System.currentTimeMillis());
+
+                pedidoAtual.setForma_pagamento(edtFormaPagamento.getText());
+                pedidoAtual.setFonte_pedido(edtFonte.getText());
+                try {
+                    pedidoAtual.setEntradaDate(sdf.parse(sdf.format(date)));
+                }catch (ParseException e){
+                    e.printStackTrace();
+                }
+                pedidoAtual.setEntradaHora(horario);
+                pedidoAtual.setTriagemHora(horario);
+                pedidoAtual.setCheckoutHora(horario);
+                pedidoAtual.setFinalizadoHora(horario);
+                pedidoAtual.setOperador(user);
+                pedidoAtual.setStatus(1);
+            }
+
+            @Override
+            protected Task<OrdemPedido> createTask() {
+                return new Task<OrdemPedido>() {
+                    @Override
+                    protected OrdemPedido call() throws Exception {
+                        OrdemPedido ped = null;
+                        if (checkBoxManual.isSelected() == false) {
+                            if(pedidoAtual.getForma_pagamento().isEmpty() ||  pedidoAtual.getFonte_pedido().isEmpty()){
+                                alertDialogErro("Preencha todos os Campos!");
+                            }else{
+                              ped = verificarCheckboxManual();
+                            }
+                        }else{
+                            if(pedidoAtual.getForma_pagamento().isEmpty() ||  pedidoAtual.getFonte_pedido().isEmpty()
+                                    || timePickerEntrada.getPromptText().isEmpty()|| timePickerTriagem.getPromptText().isEmpty() || timePickerCheckout.getPromptText().isEmpty()
+                                    || timePickerSaida.getPromptText().isEmpty() || timePickerFinalizado.getPromptText().isEmpty() || edtCaixa.getText().isEmpty()
+                                    || edtEntregador.getText().isEmpty()){
+                                alertDialogErro("Preencha todos os Campos!");
+                            }else if((selected_Cliente.getNome().length() > 155 || selected_Cliente.getEndereco().length() > 500 || selected_Cliente.getTelefone().length() > 55 )){
+                                alertDialogErro("Os campos excedem o tamanho de maximo de caracteres.");
+                            }else{
+                               ped = verificarCheckboxManual();
+                            }
+                        }
+                        return ped;
+                    }
+                };
+            }
+
+            private OrdemPedido verificarCheckboxManual (){
+                OrdemPedido ped = null;
+                if (checkBoxManual.isSelected()) {
+                    //insertPedidoManual();
+                }else{
+                    ped  = insertPedido();
+                }
+                return ped;
+            }
+
+            private OrdemPedido insertPedido() {
+                System.out.println("PId: " + pedidoAtual.getId());
+                System.out.println("CId: " + pedidoAtual.getCliente().getId());
+                System.out.println("CNome: " + pedidoAtual.getCliente().getNome());
+                System.out.println("Pag: " + pedidoAtual.getForma_pagamento());
+                System.out.println("HR: " + pedidoAtual.getEntradaHora());
+                System.out.println("DT: " + pedidoAtual.getEntradaDate());
+                System.out.println("OP: " + pedidoAtual.getOperador());
+
+                OrdemPedido newPed = PedidoService.insert(pedidoAtual);
+                System.out.println(newPed);
+
+                return newPed;
+            }
+
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                if(getValue() != null){
+                    loading.close();
+                    fecharJanela();
+                }else{
+                    loading.close();
+                    JFXDialog erro = AlertDialogModel.alertDialogErro("Houve um problema ao gerar o pedido, tente novamente mais tarde", stackPane);
+                }
+            }
+        }.start();
 
     }
-    private void verificarCheckboxManual (){
-        if (checkBoxManual.isSelected()) {
-            //insertPedidoManual();
-        }else{
-            insertPedido();
-        }
-    }
+
     private void insertPedidoManual() {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Date date = new Date();
@@ -630,28 +690,6 @@ public class novoPedidoController implements Initializable {
             }else{
                 System.out.println("Houve um problema ao gerar estatistica do pedido");
             }
-        }else{
-            JFXDialog dialog = AlertDialogModel.alertDialogErro("Houve um problema ao tentar incluir pedido", stackPane);
-            dialog.show();
-        }
-    }
-    private void insertPedido() {
-        //data_entrada = dateFormat.format(date);
-        System.out.println("PId: " + pedidoAtual.getId());
-        System.out.println("CId: " + pedidoAtual.getCliente().getId());
-        System.out.println("CNome: " + pedidoAtual.getCliente().getNome());
-        System.out.println("Pag: " + pedidoAtual.getForma_pagamento());
-        System.out.println("HR: " + pedidoAtual.getEntradaHora());
-        System.out.println("DT: " + pedidoAtual.getEntradaDate());
-        System.out.println("OP: " + pedidoAtual.getOperador());
-        //inserir pedido
-
-        OrdemPedido newPed = PedidoService.insert(pedidoAtual);
-        System.out.println(newPed);
-        if(newPed != null){
-            //Adicionar Contagem ao cliente
-            //boolean state2 = db_crud.metodoClienteAddPedido(clienteAtual.getId(), clienteAtual.getQtdPedidos());
-            fecharJanela();
         }else{
             JFXDialog dialog = AlertDialogModel.alertDialogErro("Houve um problema ao tentar incluir pedido", stackPane);
             dialog.show();

@@ -106,6 +106,7 @@ public class  detalhesPedidoController implements Initializable {
     private JFXButton btnADD;
 
     private  JFXDialog dialog;
+    JFXDialog dialogNovoProduto;
 
     private BorderPane border;
 
@@ -133,11 +134,7 @@ public class  detalhesPedidoController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-
         buscaDados();
-
-        setupComponentes();
-
     }
 
     private void buscaDados() {
@@ -167,6 +164,7 @@ public class  detalhesPedidoController implements Initializable {
             @Override
             protected void succeeded() {
                 super.succeeded();
+                setupComponentes();
                 loading.close();
             }
         }.start();
@@ -179,9 +177,9 @@ public class  detalhesPedidoController implements Initializable {
     }
 
     private void setupEdt() {
-            ArrayList<String> nomes = new ArrayList<>();
+            ArrayList<Produto> nomes = new ArrayList<>();
             for(int i = 0; i<produtos.size(); i++){
-                nomes.add(produtos.get(i).getNome());
+                nomes.add(produtos.get(i));
             }
 
             edtNomeProduto.setOnMouseClicked(e -> {
@@ -197,14 +195,15 @@ public class  detalhesPedidoController implements Initializable {
                 }
             });
 
-            JFXAutoCompletePopup<String> autoCompletePopup = new JFXAutoCompletePopup<>();
+            JFXAutoCompletePopup<Produto> autoCompletePopup = new JFXAutoCompletePopup<>();
             autoCompletePopup.setPrefWidth(500);
             autoCompletePopup.getSuggestions().addAll(nomes);
 
             autoCompletePopup.setSelectionHandler(event -> {
-                edtNomeProduto.setText(event.getObject());
-                System.out.println("Buscando Produto selecionado: " + event.getObject().toUpperCase());
-                produtoAtual = ProdutoService.getByNome(event.getObject().toUpperCase()).get(0);
+                edtNomeProduto.setText(event.getObject().getNome());
+                //System.out.println("Buscando Produto selecionado: " + event.getObject().getNome().toUpperCase());
+                //produtoAtual = ProdutoService.getByNome(event.getObject().getNome().toUpperCase()).get(0);
+                produtoAtual = event.getObject();
                 System.out.println("Produto selecionado[recuperado]: " + produtoAtual.getNome());
                 if(table_index != 3){
                     edtQTD.requestFocus();
@@ -218,15 +217,14 @@ public class  detalhesPedidoController implements Initializable {
             edtNomeProduto.setOnKeyPressed((e) -> {
                 switch (e.getCode()){
                     case ENTER:
-                        produtoAtual = verificarProdutoExistente(edtNomeProduto.getText());
-                        btnADD.requestFocus();
+                        edtQTD.requestFocus();
                         break;
                 }
             });
 
             // filtering options
             edtNomeProduto.textProperty().addListener(observable -> {
-                autoCompletePopup.filter(string -> string.toLowerCase().contains(edtNomeProduto.getText().toLowerCase()));
+                autoCompletePopup.filter(string -> string.getNome().toLowerCase().contains(edtNomeProduto.getText().toLowerCase()));
                 if (autoCompletePopup.getFilteredSuggestions().isEmpty() || edtNomeProduto.getText().isEmpty()) {
                     autoCompletePopup.hide();
                     // if you remove textField.getText.isEmpty() when text field is empty it suggests all options
@@ -258,7 +256,7 @@ public class  detalhesPedidoController implements Initializable {
             }
         });
         btnADD.setOnKeyPressed((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, "operador") == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "user") == true){
                 switch (e.getCode()){
                     case ENTER:
                         adicionarProdutoLista();
@@ -300,7 +298,7 @@ public class  detalhesPedidoController implements Initializable {
             }
         });
         btnADD.setOnAction((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, "operador") == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "user") == true){
                 if(table_index != 3){
                     adicionarProdutoLista();
                 }else{
@@ -360,7 +358,7 @@ public class  detalhesPedidoController implements Initializable {
         });
 
         tableProdutos.setOnKeyPressed((e) -> {
-            if(UserPrivilegiesVerify.permissaoVerBotao(user, "operador") == true){
+            if(UserPrivilegiesVerify.permissaoVerBotao(user, "user") == true){
                 switch (e.getCode()) {
                     case DELETE:
                         if(isSelected == true){
@@ -528,31 +526,6 @@ public class  detalhesPedidoController implements Initializable {
     //Metodos Iniciais
 
     //Metodos de Negocios
-    private Produto verificarProdutoExistente(String text) {
-        AtomicReference<Produto> produto = new AtomicReference<Produto>();
-        List<Produto> prodList = ProdutoService.getByNome(text);
-        if(prodList.size() <=0){
-            System.out.println("Produto Inexistente");
-            JFXButton btnOK = DefaultComponents.defaultButton("CRIAR");
-            btnOK.setOnAction(e -> {
-                String output = ProdutoService.insert(new Produto(null, text));
-                if(!(output.equals(""))){
-                    produto.set(jsonProdToObj(output));
-                    dialog.close();
-                    recuperarProdutos();
-                }else{
-                    JFXDialog dialogErro = AlertDialogModel.alertDialogErro("Houve um problema ao criar o produto, tente novamente.", stackPane);
-                    dialogErro.show();
-                }
-            });
-            dialog = AlertDialogModel.alertDialogAction("Produto nao encontrado, deseja criar um novo?",stackPane,btnOK);
-            dialog.show();
-        }else{
-            System.out.println("Produto existente");
-            produto.set(prodList.get(0));
-        }
-        return produto.get();
-    }
 
 
     private Produto jsonProdToObj(String text){
@@ -573,10 +546,122 @@ public class  detalhesPedidoController implements Initializable {
             alert.setContentText("Preencha todos os Dados!");
             alert.showAndWait();
         }else{
-            System.out.println("Adicionando produto a lista atual");
-            produtosPedido.add(produtoAtual.toOrderProduct(pedido, Integer.parseInt(edtQTD.getText().trim())));
-            restartAdd();
+
+            if(produtoAtual != null){
+                System.out.println("Adicionando produto a lista atual");
+                produtosPedido.add(produtoAtual.toOrderProduct(pedido, Integer.parseInt(edtQTD.getText().trim())));
+
+            }else{
+
+                JFXDialog loading = LoadingPane.SimpleLoading(stackPane);
+                new Service<Produto>(){
+                    @Override
+                    public void start() {
+                        loading.show();
+                        super.start();
+                    }
+
+                    @Override
+                    protected Task<Produto> createTask() {
+                        return new Task<Produto>() {
+                            @Override
+                            protected Produto call() throws Exception {
+                                Produto prod = verificarProdutoExistente(edtNomeProduto.getText().toUpperCase().trim());
+                                return prod;
+                            }
+                        };
+                    }
+
+                    private Produto verificarProdutoExistente(String text) {
+                        AtomicReference<Produto> produto = new AtomicReference<Produto>();
+                        List<Produto> prodList = ProdutoService.getByNome(text);
+                        if(prodList.size() <=0){
+                            System.out.println("Produto Inexistente");
+                            produto.set(null);
+                            loading.close();
+                        }else{
+                            System.out.println("Produto existente");
+                            produto.set(prodList.get(0));
+                            loading.close();
+                        }
+                        return produto.get();
+                    }
+
+
+                    @Override
+                    protected void succeeded() {
+                        super.succeeded();
+                        loading.close();
+                        if(getValue() != null){
+                            produtoAtual = getValue();
+                            produtosPedido.add(produto.toOrderProduct(pedido, Integer.parseInt(edtQTD.getText())));
+                            restartAdd();
+                        }else{
+                            produtoAtual = null;
+                            dialogNovoProduto();
+                        }
+                    }
+                }.start();
+            }
+
         }
+
+
+    }
+
+    private void dialogNovoProduto(){
+        System.out.println("Configurando dialog");
+        JFXButton btnOK = DefaultComponents.defaultButton("CRIAR");
+        //btnOK.setOnAction(e -> criarProduto(new Produto(null, edtNome.getText().toUpperCase().trim())));
+        btnOK.setOnAction(e -> {
+            criarProduto();
+        });
+
+
+        dialogNovoProduto = AlertDialogModel.alertDialogAction("Produto nao encontrado, deseja criar um novo?",stackPane,btnOK);
+        dialogNovoProduto.show();
+    }
+
+    private void criarProduto() {
+        System.out.println("Criando Produto");
+        new Service<Produto>(){
+            JFXDialog loading = LoadingPane.SimpleLoading(stackPane);
+
+            @Override
+            public void start() {
+                loading.show();
+                super.start();
+            }
+
+            @Override
+            protected Task<Produto> createTask() {
+                return new Task<Produto>() {
+                    @Override
+                    protected Produto call() throws Exception {
+                        Produto prod = new Produto(null, edtNomeProduto.getText().toUpperCase().trim());
+                        return ProdutoService.insert(prod);
+                    }
+                };
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                loading.close();
+                if(getValue() != null && !(getValue().getNome().equals(""))){
+                    produto = getValue();
+                    produtosPedido.add(produto.toOrderProduct(pedido, Integer.parseInt(edtQTD.getText())));
+                    dialogNovoProduto.close();
+                    produto = null;
+                    recuperarProdutos();
+                }else{
+                    JFXDialog dialogErro = AlertDialogModel.alertDialogErro("Houve um problema ao criar o produto, tente novamente.", stackPane);
+                    dialogErro.show();
+                }
+            }
+
+        }.start();
+
     }
 
     private void insertProduto() {
@@ -684,6 +769,7 @@ public class  detalhesPedidoController implements Initializable {
         edtQTD.setText("1");
         edtNomeProduto.requestFocus();
         tableProdutos.setItems(produtosPedido);
+        produtoAtual = null;
     }
 
     private void fecharJanela(){

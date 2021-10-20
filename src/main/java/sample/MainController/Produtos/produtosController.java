@@ -284,8 +284,8 @@ public class produtosController implements Initializable {
     private void inserirProduto(String nome_produto) throws SQLException {
         //inserir produto
         Produto produto = new Produto(null, nome_produto);
-        String output = ProdutoService.insert(produto);
-        if(!(output.equals(""))){
+        Produto prodRecup= ProdutoService.insert(produto);
+        if(prodRecup != null){
             refreshTable();
             dialog.close();
         }else{
