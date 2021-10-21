@@ -319,10 +319,41 @@ public class funcionariosController implements Initializable {
         btnSalvar.setOnAction((e) -> {
             if(!(edtNome.getText().equals("")) && !(edtSenha.getText().equals(""))){
                 String nome = edtNome.getText().trim();
-                int permissions = cbPermissoes.getSelectionModel().getSelectedIndex();
+                String permission = cbPermissoes.getSelectionModel().getSelectedItem();
                 String senha = edtSenha.getText().trim();
-                //Usuario newUser = new Usuario(modelUsuario.getId(),nome, StringUtil.Cripto(senha), permissions);
-                //atualizar usuario caso ok retornar refreshtable e dialog.close();
+                Usuario newUser = new Usuario(modelUsuario.getId(),nome, senha, permission);
+                    new Service<Usuario>(){
+                        JFXDialog loading = LoadingPane.SimpleLoading(stackPane);
+
+                        @Override
+                        public void start() {
+                            super.start();
+                            loading.show();
+                        }
+
+                        @Override
+                        protected Task<Usuario> createTask() {
+                            return new Task<Usuario>() {
+                                @Override
+                                protected Usuario call() throws Exception {
+                                    Usuario usr = new Usuario();
+                                    if(UsuarioService.update(newUser) == 2){
+                                        usr = UsuarioService.getById(newUser.getId());
+                                    }
+                                    return usr;
+                                }
+                            };
+                        }
+
+                        @Override
+                        protected void succeeded() {
+                            super.succeeded();
+                            refreshTable();
+                            loading.close();
+                            dialog.close();
+                        }
+
+                    }.start();
             }else{
                 JFXDialog dialog = AlertDialogModel.alertDialogErro("Preencha todos os campos", stackPane);
                 dialog.show();
