@@ -315,12 +315,12 @@ public class funcionariosController implements Initializable {
 
         vboxPrincipal.getChildren().addAll(row1, row2, row3);
 
-        edtNome.setText(modelUsuario.getUsername());
-        btnSalvar.setOnAction((e) -> {
-            if(!(edtNome.getText().equals("")) && !(edtSenha.getText().equals(""))){
-                String nome = edtNome.getText().trim();
+                edtNome.setText(modelUsuario.getUsername());
+                btnSalvar.setOnAction((e) -> {
+                    if(!(edtNome.getText().equals("")) && !(edtSenha.getText().equals(""))){
+                        String nome = edtNome.getText().toUpperCase().trim();
                 String permission = cbPermissoes.getSelectionModel().getSelectedItem();
-                String senha = edtSenha.getText().trim();
+                String senha = edtSenha.getText().toUpperCase().trim();
                 Usuario newUser = new Usuario(modelUsuario.getId(),nome, senha, permission);
                     new Service<Usuario>(){
                         JFXDialog loading = LoadingPane.SimpleLoading(stackPane);
