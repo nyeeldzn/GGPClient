@@ -1,9 +1,13 @@
 package sample.MainController.Clientes;
 
+import Services.ClienteService;
 import com.jfoenix.controls.JFXButton;
+import com.jfoenix.controls.JFXDialog;
+import helpers.AlertDialogModel;
 import helpers.DefaultComponents;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import helpers.LoadingPane;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.layout.StackPane;
@@ -19,9 +23,8 @@ import models.Cliente;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class importarClientesController implements Initializable {
@@ -40,14 +43,13 @@ public class importarClientesController implements Initializable {
 
     @FXML
     private Text textNome;
+    List<Cliente> listaClientes = new ArrayList<>();
 
-    ObservableList<Cliente> listaClientes = FXCollections.observableArrayList();
-
-    Connection connection = null;
     Thread t1;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        btnImport.setVisible(false);
         Thread t = Thread.currentThread();
         System.out.println( "Thread Inicial: " + t.getName());
         setupComponents();
@@ -58,20 +60,11 @@ public class importarClientesController implements Initializable {
             quitScreen();
         });
         btnImport.setOnAction((e) -> {
-            //connection = db_connect.getConnect();
-                int i;
-                for (i = 0; i < listaClientes.size(); i++) {
-                    boolean state = metodoInsertListaClientes(listaClientes.get(i));
-                    if(state){
-                        System.out.println("Cliente: " + listaClientes.get(i).getNome() + " Adicionado com sucesso!");
-                        int finalI = i;
-                        Thread t1 = new Thread( () -> {
-                            textNome.setText("Adicionando cliente: " + listaClientes.get(finalI).getNome() + "  " + "(" + finalI + "/" + listaClientes.size() + ")");
-                        });
-                        t1.start();
-                    }else {
-                        System.out.println("Houve um problema ao adicionar o cliente: " + listaClientes.get(i).getNome());
-                    }
+                if(listaClientes.size() > 0){
+                    metodoInsertListaClientes(listaClientes);
+                }else{
+                    JFXDialog dialog = AlertDialogModel.alertDialogErro("Selecione uma planilha compativel primeiro", stackPane);
+                    dialog.show();
                 }
         });
         btnSelect.setOnAction((e) -> {
@@ -92,12 +85,13 @@ public class importarClientesController implements Initializable {
         }
 
         if(listaClientes.size() > 0){
+            btnImport.setVisible(true);
             textNome.setText("Sucesso, clique em importar para enviar para o Banco de Dados");
         }
     }
 
-    private ObservableList<Cliente> metodoImport(File file) throws IOException, BiffException {
-        ObservableList<Cliente> listaTemporaria = FXCollections.observableArrayList();
+    private List<Cliente> metodoImport(File file) throws IOException, BiffException {
+        List<Cliente> listaTemporaria = new ArrayList<>();
         Workbook workbook = Workbook.getWorkbook(file);
         Sheet sheet = workbook.getSheet(0);
         int linhas = sheet.getRows();
@@ -110,35 +104,47 @@ public class importarClientesController implements Initializable {
             Cell cellEndereco = sheet.getCell(4, i);
             Cell cellNumero = sheet.getCell(5, i);
             Cell cellBairro = sheet.getCell(6, i);
-            String enderecoCompleto = cellEndereco.getContents() + "," + cellNumero.getContents() + "," + cellBairro.getContents() ;
-            listaTemporaria.add(new Cliente(0L, cellNome.getContents(), enderecoCompleto, new Bairro(0L,"Bairro sem nome"), "Usuario Importado", "sem data"));
+            String enderecoCompleto = cellEndereco.getContents() + "," + cellNumero.getContents() ;
+            listaTemporaria.add(new Cliente(0L, cellNome.getContents(), enderecoCompleto, new Bairro(0L, cellBairro.getContents()), "Usuario Importado", "sem data"));
             System.out.println("Cliente: " + listaTemporaria.get(i).getNome() + " " + listaTemporaria.get(i).getTelefone() + " " + listaTemporaria.get(i).getEndereco() + " " + listaTemporaria.get(i).getData_cadastro());
         }
+
         workbook.close();
         return listaTemporaria;
     }
 
-    private boolean metodoInsertListaClientes(Cliente cliente) {
+    private boolean metodoInsertListaClientes(List<Cliente> cliente) {
         boolean state = false;
-        String query = null;
-        PreparedStatement preparableStatement = null;
-        try {
-            query = "INSERT INTO `Clientes`(`id`, `cliente_nome`, `cliente_endereco`, `cliente_telefone`, `data_cadastro`) VALUES (?,?,?,?,?)";
-            preparableStatement = connection.prepareStatement(query);
-            preparableStatement.setInt(1, 0);
-            preparableStatement.setString(2, cliente.getNome());
-            preparableStatement.setString(3, cliente.getEndereco());
-            preparableStatement.setString(4, cliente.getTelefone());
-            preparableStatement.setString(5, cliente.getData_cadastro());
-            int count = preparableStatement.executeUpdate();
-            if(count > 0){
-                state = true;
-            }else {
-                state = false;
+
+        new Service<List<Cliente>>(){
+            JFXDialog loading = LoadingPane.SimpleLoading(stackPane);
+            @Override
+            public void start() {
+                loading.show();
+                super.start();
             }
-        }catch (SQLException ex){
-            ex.printStackTrace();
-        }
+
+            @Override
+            protected Task<List<Cliente>> createTask() {
+                return new Task<List<Cliente>>() {
+                    @Override
+                    protected List<Cliente> call() throws Exception {
+                        List<Cliente> list = ClienteService.insertList(listaClientes);
+                        return list;
+                    }
+                };
+            }
+
+            @Override
+            protected void succeeded() {
+                if(getValue().size() == listaClientes.size() ){
+                    loading.close();
+                    quitScreen();
+                }
+                super.succeeded();
+            }
+        }.start();
+
         return state;
     }
 

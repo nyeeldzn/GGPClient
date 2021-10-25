@@ -8,12 +8,15 @@ import com.jfoenix.controls.JFXTextField;
 import helpers.AlertDialogModel;
 import helpers.DefaultComponents;
 import helpers.ExcluirDialogModel;
+import helpers.LoadingPane;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -44,6 +47,7 @@ import sample.MainController.MainController;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.Boolean;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -295,53 +299,77 @@ public class produtosController implements Initializable {
     }
     public void gerarDocumentoXLS(File file){
         System.out.println("Inicnado exportação");
-        ObservableList<Produto> listaTabela = FXCollections.observableArrayList();
-        int tableSize = tableView.getItems().size();
-        for(int a = 0; a<tableSize; a++){
-            System.out.println("Busca: " + a);
-            System.out.println(tableSize);
-            listaTabela.add(tableView.getItems().get(a));
-        }
-        try{
-            WritableWorkbook planilha = Workbook.createWorkbook(file);
-            // Adcionando o nome da aba
-            WritableSheet aba = planilha.createSheet("Lista de Produtos", 0);
-            //Cabeçalhos
-            String cabecalho[] = new String[2];
-            cabecalho[0] = "ID:";
-            cabecalho[1] = "Nome do Produto:";
-            // Cor de fundo das celular
-            Colour bckColor = Colour.DARK_GREEN;
-            WritableCellFormat cellFormat = new WritableCellFormat();
-            cellFormat.setBackground(bckColor);
-            // Cor e tipo de Fonte
-            WritableFont fonte = new WritableFont(WritableFont.ARIAL);
-            fonte.setColour(Colour.GOLD);
-            cellFormat.setFont(fonte);
-
-            // escrever o Header para o xls
-            for(int i =0; i< cabecalho.length; i++){
-                Label label = new Label(i, 0, cabecalho[i]);
-                aba.addCell(label);
-                WritableCell cell = aba.getWritableCell(i, 0);
-                cell.setCellFormat(cellFormat);
+        new Service<Boolean>(){
+            JFXDialog loading = LoadingPane.SimpleLoading(stackPane);
+            @Override
+            public void start() {
+                loading.show();
+                super.start();
             }
 
-            for (int linha = 1; linha < listaTabela.size(); linha++) {
-                Label label = new Label(0, linha, String.valueOf(listaTabela.get(linha).getId()));
-                aba.addCell(label);
-                label = new Label(1, linha, listaTabela.get(linha).getNome());
-                //int count = DefaultComponents.countOfChar(listaTabela.get(linha).getNome());
-                aba.setColumnView(1, 120);
-                aba.addCell(label);
+            @Override
+            protected Task<Boolean> createTask() {
+                return new Task<Boolean>() {
+                    @Override
+                    protected Boolean call() throws Exception {
+                        ObservableList<Produto> listaTabela = FXCollections.observableArrayList();
+                        int tableSize = tableView.getItems().size();
+                        for(int a = 0; a<tableSize; a++){
+                            System.out.println("Busca: " + a);
+                            System.out.println(tableSize);
+                            listaTabela.add(tableView.getItems().get(a));
+                        }
+                        try{
+                            WritableWorkbook planilha = Workbook.createWorkbook(file);
+                            // Adcionando o nome da aba
+                            WritableSheet aba = planilha.createSheet("Lista de Produtos", 0);
+                            //Cabeçalhos
+                            String cabecalho[] = new String[2];
+                            cabecalho[0] = "ID:";
+                            cabecalho[1] = "Nome do Produto:";
+                            // Cor de fundo das celular
+                            Colour bckColor = Colour.DARK_GREEN;
+                            WritableCellFormat cellFormat = new WritableCellFormat();
+                            cellFormat.setBackground(bckColor);
+                            // Cor e tipo de Fonte
+                            WritableFont fonte = new WritableFont(WritableFont.ARIAL);
+                            fonte.setColour(Colour.AQUA);
+                            cellFormat.setFont(fonte);
+
+                            // escrever o Header para o xls
+                            for(int i =0; i< cabecalho.length; i++){
+                                Label label = new Label(i, 0, cabecalho[i]);
+                                aba.addCell(label);
+                                WritableCell cell = aba.getWritableCell(i, 0);
+                                cell.setCellFormat(cellFormat);
+                            }
+
+                            for (int linha = 1; linha < listaTabela.size(); linha++) {
+                                Label label = new Label(0, linha, String.valueOf(listaTabela.get(linha).getId()));
+                                aba.addCell(label);
+                                label = new Label(1, linha, listaTabela.get(linha).getNome());
+                                int count = DefaultComponents.countOfChar(listaTabela.get(linha).getNome());
+                                aba.setColumnView(1, 120);
+                                aba.addCell(label);
+                            }
+
+                            planilha.write();
+                            //fecha o arquivo
+                            planilha.close();
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                        return null;
+                    }
+                };
             }
 
-            planilha.write();
-            //fecha o arquivo
-            planilha.close();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                loading.close();
+            }
+        }.start();
         System.out.println("Fim");
     }
     //Metodos de Negocios

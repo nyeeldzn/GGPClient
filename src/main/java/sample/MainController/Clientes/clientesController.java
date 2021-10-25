@@ -13,6 +13,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -47,6 +49,7 @@ import sample.MainController.MainController;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.Boolean;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -58,6 +61,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -138,8 +142,8 @@ public class clientesController implements Initializable {
         @Override
         public void initialize(URL location, ResourceBundle resources) {
                 recuperarUsuario();
+                recuperarClientes();
                 setupComponentes();
-                prepararTableView();
         }
 
 
@@ -226,11 +230,7 @@ public class clientesController implements Initializable {
                                 }
                             }
                         });
-                        try {
-                                recuperarClientes();
-                        } catch (SQLException exception) {
-                                exception.printStackTrace();
-                        }
+
                 }
         //metodos iniciais
 
@@ -302,69 +302,92 @@ public class clientesController implements Initializable {
 
     public void gerarDocumentoXLS(File file){
             System.out.println("Iniciando exportação");
-            //Busca todos os itens da tabela
-            ObservableList<Cliente> listaTabela = FXCollections.observableArrayList();
-            int tableSize = tableView.getItems().size();
-            for(int a = 0; a<tableSize; a++){
-                System.out.println("Busca: " + a);
-                System.out.println(tableSize);
-                listaTabela.add(tableView.getItems().get(a));
-            }
-            //
-            try{
-                WritableWorkbook planilha = Workbook.createWorkbook(file);
-                // Adcionando o nome da aba
-                WritableSheet aba = planilha.createSheet("Lista de Produtos", 0);
-                //Cabeçalhos
-                String cabecalho[] = new String[9];
-                cabecalho[0] = "ID:";
-                cabecalho[1] = "Nome do Cliente:";
-                cabecalho[2] = "Endereco do Cliente:";
-                cabecalho[3] = "Telefone do Cliente:";
-                cabecalho[4] = "Data de Cadastro:";
+                new Service<Boolean>(){
+                    JFXDialog loading = LoadingPane.SimpleLoading(stackPane);
+                    @Override
+                    public void start() {
+                        loading.show();
+                        super.start();
+                    }
+
+                    @Override
+                    protected Task<Boolean> createTask() {
+                        return new Task<Boolean>() {
+                            @Override
+                            protected Boolean call() throws Exception {
+                                ObservableList<Cliente> listaTabela = FXCollections.observableArrayList();
+                                int tableSize = tableView.getItems().size();
+                                for(int a = 0; a<tableSize; a++){
+                                    System.out.println("Busca: " + a);
+                                    System.out.println(tableSize);
+                                    listaTabela.add(tableView.getItems().get(a));
+                                }
+                                //
+                                try{
+                                    WritableWorkbook planilha = Workbook.createWorkbook(file);
+                                    // Adcionando o nome da aba
+                                    WritableSheet aba = planilha.createSheet("Lista de Produtos", 0);
+                                    //Cabeçalhos
+                                    String cabecalho[] = new String[9];
+                                    cabecalho[0] = "ID:";
+                                    cabecalho[1] = "Nome do Cliente:";
+                                    cabecalho[2] = "Endereco do Cliente:";
+                                    cabecalho[3] = "Telefone do Cliente:";
+                                    cabecalho[4] = "Data de Cadastro:";
 
 
-                // Cor de fundo das celular
-                Colour bckColor = Colour.DARK_BLUE2;
-                WritableCellFormat cellFormat = new WritableCellFormat();
-                cellFormat.setBackground(bckColor);
-                // Cor e tipo de Fonte
-                WritableFont fonte = new WritableFont(WritableFont.ARIAL);
-                fonte.setColour(Colour.GOLD);
-                cellFormat.setFont(fonte);
+                                    // Cor de fundo das celular
+                                    Colour bckColor = Colour.DARK_BLUE2;
+                                    WritableCellFormat cellFormat = new WritableCellFormat();
+                                    cellFormat.setBackground(bckColor);
+                                    // Cor e tipo de Fonte
+                                    WritableFont fonte = new WritableFont(WritableFont.ARIAL);
+                                    fonte.setColour(Colour.GOLD);
+                                    cellFormat.setFont(fonte);
 
-                // escrever o Header para o xls
-                for(int i =0; i< cabecalho.length; i++){
-                    Label label = new Label(i, 0, cabecalho[i]);
-                    aba.addCell(label);
-                    WritableCell cell = aba.getWritableCell(i, 0);
-                    cell.setCellFormat(cellFormat);
-                }
+                                    // escrever o Header para o xls
+                                    for(int i =0; i< cabecalho.length; i++){
+                                        Label label = new Label(i, 0, cabecalho[i]);
+                                        aba.addCell(label);
+                                        WritableCell cell = aba.getWritableCell(i, 0);
+                                        cell.setCellFormat(cellFormat);
+                                    }
 
-                for (int linha = 1; linha <= listaTabela.size(); linha++) {
-                    Label label = new Label(0, linha, String.valueOf(listaTabela.get(linha - 1).getId()));
-                    aba.addCell(label);
-                    label = new Label(1, linha, listaTabela.get(linha- 1).getNome());
-                    //int count = DefaultComponents.countOfChar(listaTabela.get(linha).getCliente_nome());
-                    aba.setColumnView(1, 55);
-                    aba.addCell(label);
-                    label = new Label(2, linha, listaTabela.get(linha- 1).getEndereco());
-                    aba.setColumnView(2, 55);
-                    aba.addCell(label);
-                    label = new Label(3, linha, listaTabela.get(linha- 1).getTelefone());
-                    aba.setColumnView(3, 10);
-                    aba.addCell(label);
-                    label = new Label(4, linha, listaTabela.get(linha- 1).getData_cadastro());
-                    aba.setColumnView(4, 10);
-                    aba.addCell(label);
-                }
+                                    for (int linha = 1; linha <= listaTabela.size(); linha++) {
+                                        Label label = new Label(0, linha, String.valueOf(listaTabela.get(linha - 1).getId()));
+                                        aba.addCell(label);
+                                        label = new Label(1, linha, listaTabela.get(linha- 1).getNome());
+                                        int count = DefaultComponents.countOfChar(listaTabela.get(linha).getNome());
+                                        aba.setColumnView(1, 55);
+                                        aba.addCell(label);
+                                        label = new Label(2, linha, listaTabela.get(linha- 1).getEndereco() + ", Bairro " + listaTabela.get(linha - 1).getBairro().getNome());
+                                        aba.setColumnView(2, 55);
+                                        aba.addCell(label);
+                                        label = new Label(3, linha, listaTabela.get(linha- 1).getTelefone());
+                                        aba.setColumnView(3, 10);
+                                        aba.addCell(label);
+                                        label = new Label(4, linha, listaTabela.get(linha- 1).getData_cadastro());
+                                        aba.setColumnView(4, 10);
+                                        aba.addCell(label);
+                                    }
 
-                planilha.write();
-                //fecha o arquivo
-                planilha.close();
-            }catch (Exception e){
-                e.printStackTrace();
-            }
+                                    planilha.write();
+                                    //fecha o arquivo
+                                    planilha.close();
+                                }catch (Exception e){
+                                    e.printStackTrace();
+                                }
+                                return null;
+                            }
+                        };
+                    }
+
+                    @Override
+                    protected void succeeded() {
+                        super.succeeded();
+                        loading.close();
+                    }
+                }.start();
             System.out.println("Fim");
         }
             public void gerarDocumentoPedidosXLS(File file){
@@ -502,11 +525,36 @@ public class clientesController implements Initializable {
                                     break;
                 }
             }
-            private void recuperarClientes() throws SQLException {
-                //busca todos os clientes
-                listaClientes.clear();
-                listaClientes = FXCollections.observableArrayList(ClienteService.findAll());
-                tableView.setItems(listaClientes);
+            private void recuperarClientes(){
+                new Service<List<Cliente>>(){
+                    JFXDialog loading = LoadingPane.SimpleLoading(stackPane);
+                    @Override
+                    public void start() {
+                        loading.show();
+                        super.start();
+                    }
+
+                    @Override
+                    protected Task<List<Cliente>> createTask() {
+                        return new Task<List<Cliente>>() {
+                            @Override
+                            protected List<Cliente> call() throws Exception {
+                                return ClienteService.findAll();
+                            }
+                        };
+                    }
+
+                    @Override
+                    protected void succeeded() {
+                        super.succeeded();
+                        prepararTableView();
+                        listaClientes.clear();
+                        listaClientes = FXCollections.observableArrayList(getValue());
+                        tableView.setItems(listaClientes);
+                        loading.close();
+                    }
+                }.start();
+
             }
             private void alertDialogClientes() {
                 JFXDialogLayout dialogLayout = new JFXDialogLayout();
@@ -885,11 +933,8 @@ public class clientesController implements Initializable {
             }
             private void refreshTable() {
                 listaClientes.clear();
-                try {
-                    recuperarClientes();
-                } catch (SQLException exception) {
-                    exception.printStackTrace();
-                }
+                recuperarClientes();
+
 
             }
         //metodos de controle

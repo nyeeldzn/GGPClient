@@ -3,6 +3,7 @@ package sample.MainController.Pedidos;
 import Services.PedidoService;
 import com.jfoenix.controls.*;
 import helpers.DefaultComponents;
+import helpers.LoadingPane;
 import helpers.intentData;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
@@ -11,6 +12,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -28,15 +31,16 @@ import javafx.stage.StageStyle;
 import javafx.util.StringConverter;
 import jxl.Workbook;
 import jxl.format.Colour;
-import jxl.write.Label;
 import jxl.write.*;
+import jxl.write.Label;
 import models.Cliente;
-import models.PedidoFindJsonHelper;
 import models.OrdemPedido;
+import models.PedidoFindJsonHelper;
 import sample.MainController.MainController;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.Boolean;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -424,79 +428,105 @@ public class pedidosController implements Initializable {
     public void gerarDocumentoXLS(File file){
         System.out.println("Iniciando exportação");
         //Busca todos os itens da tabela
-        ObservableList<OrdemPedido> listaTabela = FXCollections.observableArrayList();
-        int tableSize = tableView.getItems().size();
-        for(int a = 0; a<tableSize; a++){
-            System.out.println("Busca: " + a);
-            System.out.println(tableSize);
-            listaTabela.add(tableView.getItems().get(a));
-        }
-        //
-        try{
-            WritableWorkbook planilha = Workbook.createWorkbook(file);
-            // Adcionando o nome da aba
-            WritableSheet aba = planilha.createSheet("Lista de Produtos", 0);
-            //Cabeçalhos
-            String cabecalho[] = new String[9];
-            cabecalho[0] = "ID:";
-            cabecalho[1] = "Nome do Cliente:";
-            cabecalho[2] = "Endereco do Cliente:";
-            cabecalho[3] = "Telefone do Cliente:";
-            cabecalho[4] = "Data de Entrada:";
-            cabecalho[5] = "H. Entrada";
-            cabecalho[6] = "H. Triagem";
-            cabecalho[7] = "H. Checkout";
-            cabecalho[8] = "H. Finaliz.";
 
-            // Cor de fundo das celular
-            Colour bckColor = Colour.DARK_BLUE2;
-            WritableCellFormat cellFormat = new WritableCellFormat();
-            cellFormat.setBackground(bckColor);
-            // Cor e tipo de Fonte
-            WritableFont fonte = new WritableFont(WritableFont.ARIAL);
-            fonte.setColour(Colour.GOLD);
-            cellFormat.setFont(fonte);
-
-            // escrever o Header para o xls
-            for(int i =0; i< cabecalho.length; i++){
-                Label label = new Label(i, 0, cabecalho[i]);
-                aba.addCell(label);
-                WritableCell cell = aba.getWritableCell(i, 0);
-                cell.setCellFormat(cellFormat);
+        new Service<Boolean>(){
+            JFXDialog loading = LoadingPane.SimpleLoading(stackPane);
+            @Override
+            public void start() {
+                loading.show();
+                super.start();
             }
 
-            for (int linha = 1; linha <= listaTabela.size(); linha++) {
-                Label label = new Label(0, linha, String.valueOf(listaTabela.get(linha - 1).getId()));
-                aba.addCell(label);
-                label = new Label(1, linha, listaTabela.get(linha- 1).getCliente().getNome());
-                //int count = DefaultComponents.countOfChar(listaTabela.get(linha).getCliente_nome());
-                aba.setColumnView(1, 35);
-                aba.addCell(label);
-                label = new Label(2, linha, listaTabela.get(linha- 1).getCliente().getEndereco());
-                aba.setColumnView(2, 35);
-                aba.addCell(label);
-                label = new Label(3, linha, listaTabela.get(linha- 1).getCliente().getTelefone());
-                aba.setColumnView(3, 14);
-                aba.addCell(label);
-                label = new Label(4, linha, listaTabela.get(linha- 1).getEntradaDate().toString());
-                aba.setColumnView(4, 10);
-                aba.addCell(label);
-                label = new Label(5, linha, listaTabela.get(linha- 1).getEntradaHora().toString());
-                aba.addCell(label);
-                label = new Label(6, linha, listaTabela.get(linha- 1).getTriagemHora().toString());
-                aba.addCell(label);
-                label = new Label(7, linha, listaTabela.get(linha- 1).getCheckoutHora().toString());
-                aba.addCell(label);
-                label = new Label(8, linha, listaTabela.get(linha- 1).getFinalizadoHora().toString());
-                aba.addCell(label);
+            @Override
+            protected Task<Boolean> createTask() {
+                return new Task<Boolean>() {
+                    @Override
+                    protected Boolean call() throws Exception {
+                        ObservableList<OrdemPedido> listaTabela = FXCollections.observableArrayList();
+                        int tableSize = tableView.getItems().size();
+                        for(int a = 0; a<tableSize; a++){
+                            System.out.println("Busca: " + a);
+                            System.out.println(tableSize);
+                            listaTabela.add(tableView.getItems().get(a));
+                        }
+                        //
+                        try{
+                            WritableWorkbook planilha = Workbook.createWorkbook(file);
+                            // Adcionando o nome da aba
+                            WritableSheet aba = planilha.createSheet("Lista de Produtos", 0);
+                            //Cabeçalhos
+                            String cabecalho[] = new String[9];
+                            cabecalho[0] = "ID:";
+                            cabecalho[1] = "Nome do Cliente:";
+                            cabecalho[2] = "Endereco do Cliente:";
+                            cabecalho[3] = "Telefone do Cliente:";
+                            cabecalho[4] = "Data de Entrada:";
+                            cabecalho[5] = "H. Entrada";
+                            cabecalho[6] = "H. Triagem";
+                            cabecalho[7] = "H. Checkout";
+                            cabecalho[8] = "H. Finaliz.";
+
+                            // Cor de fundo das celular
+                            Colour bckColor = Colour.DARK_BLUE2;
+                            WritableCellFormat cellFormat = new WritableCellFormat();
+                            cellFormat.setBackground(bckColor);
+                            // Cor e tipo de Fonte
+                            WritableFont fonte = new WritableFont(WritableFont.ARIAL);
+                            fonte.setColour(Colour.GOLD);
+                            cellFormat.setFont(fonte);
+
+                            // escrever o Header para o xls
+                            for(int i =0; i< cabecalho.length; i++){
+                                jxl.write.Label label = new jxl.write.Label(i, 0, cabecalho[i]);
+                                aba.addCell(label);
+                                WritableCell cell = aba.getWritableCell(i, 0);
+                                cell.setCellFormat(cellFormat);
+                            }
+
+                            for (int linha = 1; linha <= listaTabela.size(); linha++) {
+                                jxl.write.Label label = new jxl.write.Label(0, linha, String.valueOf(listaTabela.get(linha - 1).getId()));
+                                aba.addCell(label);
+                                label = new jxl.write.Label(1, linha, listaTabela.get(linha- 1).getCliente().getNome());
+                                //int count = DefaultComponents.countOfChar(listaTabela.get(linha).getCliente_nome());
+                                aba.setColumnView(1, 35);
+                                aba.addCell(label);
+                                label = new jxl.write.Label(2, linha, listaTabela.get(linha- 1).getCliente().getEndereco());
+                                aba.setColumnView(2, 35);
+                                aba.addCell(label);
+                                label = new jxl.write.Label(3, linha, listaTabela.get(linha- 1).getCliente().getTelefone());
+                                aba.setColumnView(3, 14);
+                                aba.addCell(label);
+                                label = new jxl.write.Label(4, linha, listaTabela.get(linha- 1).getEntradaDate().toString());
+                                aba.setColumnView(4, 10);
+                                aba.addCell(label);
+                                label = new jxl.write.Label(5, linha, listaTabela.get(linha- 1).getEntradaHora().toString());
+                                aba.addCell(label);
+                                label = new jxl.write.Label(6, linha, listaTabela.get(linha- 1).getTriagemHora().toString());
+                                aba.addCell(label);
+                                label = new jxl.write.Label(7, linha, listaTabela.get(linha- 1).getCheckoutHora().toString());
+                                aba.addCell(label);
+                                label = new Label(8, linha, listaTabela.get(linha- 1).getFinalizadoHora().toString());
+                                aba.addCell(label);
+                            }
+
+                            planilha.write();
+                            //fecha o arquivo
+                            planilha.close();
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                        return null;
+                    }
+                };
             }
 
-            planilha.write();
-            //fecha o arquivo
-            planilha.close();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                loading.close();
+            }
+        }.start();
+
         System.out.println("Fim");
     }
 

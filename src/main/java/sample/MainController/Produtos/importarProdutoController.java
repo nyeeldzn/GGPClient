@@ -1,9 +1,14 @@
 package sample.MainController.Produtos;
 
+import Services.ProdutoService;
 import com.jfoenix.controls.JFXButton;
+import com.jfoenix.controls.JFXDialog;
 import helpers.DefaultComponents;
+import helpers.LoadingPane;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.layout.StackPane;
@@ -12,13 +17,12 @@ import jxl.Cell;
 import jxl.Sheet;
 import jxl.Workbook;
 import jxl.read.biff.BiffException;
+import models.Produto;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.ResourceBundle;
 
 public class importarProdutoController implements Initializable {
@@ -50,37 +54,51 @@ public class importarProdutoController implements Initializable {
             metodoSelecao();
         });
         btnImport.setOnAction((e) -> {
-            // connection = db_connect.getConnect();
-            for (int i = 0; i < listaProdutos.size(); i++) {
-                textNome.setText("Adicionando produto: " + listaProdutos.get(i) + "  " + "(" + i + "/" + listaProdutos.size() + ")");
-                boolean state = metodoInsertListaProdutos(listaProdutos.get(i));
-                if(state){
-                    System.out.println("Produto: " + listaProdutos.get(i) + " Adicionado com sucesso!");
-                }else {
-                    System.out.println("Houve um problema ao adicionar o produto: " + listaProdutos.get(i));
-                }
-            }
+            metodoInsertListaProdutos();
         });
     }
 
-    private boolean metodoInsertListaProdutos(String value) {
+    private boolean metodoInsertListaProdutos() {
         boolean state = false;
-        String query = null;
-        PreparedStatement preparableStatement = null;
-        try {
-            query = "INSERT INTO `Produto`(`id`, `nome_produto`) VALUES (?,?)";
-            preparableStatement = connection.prepareStatement(query);
-            preparableStatement.setInt(1, 0);
-            preparableStatement.setString(2, value);
-            int count = preparableStatement.executeUpdate();
-            if(count > 0){
-                state = true;
-            }else {
-                state = false;
+
+        new Service<Produto>(){
+            String item = "";
+            JFXDialog loading = LoadingPane.ItemsLoading(item, stackPane);
+            @Override
+            public void start() {
+                loading.show();
+                super.start();
             }
-        }catch (SQLException ex){
-            ex.printStackTrace();
-        }
+
+            @Override
+            protected Task<Produto> createTask() {
+                return new Task<Produto>() {
+                    @Override
+                    protected Produto call() throws Exception {
+                        for (int i = 0; i < listaProdutos.size(); i++) {
+                            item = "Adicionando produto: " + listaProdutos.get(i) + "  " + "(" + i + "/" + listaProdutos.size() + ")";
+                            if(insert(listaProdutos.get(i)) != null){
+                                System.out.println("Produto: " + listaProdutos.get(i) + " Adicionado com sucesso!");
+                            }else {
+                                System.out.println("Houve um problema ao adicionar o produto: " + listaProdutos.get(i));
+                            }
+                        }
+                        return null;
+                    }
+                };
+            }
+
+            private Produto insert (String nome){
+                return ProdutoService.insert(new Produto(null, nome));
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                loading.close();
+            }
+        }.start();
+
         return state;
     }
 

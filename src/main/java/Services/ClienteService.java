@@ -8,6 +8,7 @@ import models.Cliente;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ClienteService {
 
@@ -72,6 +73,17 @@ public class ClienteService {
         System.out.println("Saida do POST" + output);
         Gson cliJson = new Gson();
         Cliente cli = cliJson.fromJson(new String(output.getBytes()), Cliente.class);
+        return cli;
+    }
+
+    public static List<Cliente> insertList(List<Cliente> cliente){
+        Gson gson = new Gson();
+        String input = gson.toJson(cliente);
+        System.out.println("Entrada do POST" + input);
+        String output = DefaultRequests.postObject("/clientes/inserirLista", input);
+        System.out.println("Saida do POST" + output);
+        Gson cliJson = new Gson();
+        List<Cliente> cli = cliJson.fromJson(new String(output.getBytes()), (Type) Cliente.class);
         return cli;
     }
 
